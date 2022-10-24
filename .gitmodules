@@ -1,0 +1,3 @@
+[submodule "lib-abstract-bnet-api"]
+	path = lib-abstract-bnet-api
+	url = https://github.com/FH3095/abstract-bnet-api.git
