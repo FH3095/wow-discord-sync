@@ -20,18 +20,14 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import eu._4fh.abstract_bnet_api.oauth2.BattleNetClients;
 
 @DefaultAnnotation(NonNull.class)
 public class Config {
 	private static @CheckForNull Config instance;
 
 	public final HikariDataSource dataSource;
-
-	public final String oAuthScope;
-	public final String oAuthApiKey;
-	public final String oAuthApiSecret;
-	public final int oAuthDefaultTokenDuration;
-	public final String oAuthAuthRedirectTarget;
+	public final BattleNetClients battleNetClients;
 
 	private Config() {
 		Path configDir;
@@ -53,11 +49,14 @@ public class Config {
 		dataSource = new HikariDataSource(hikariConfig);
 
 		final Properties main = readFile(configDir, "main.cfg");
-		oAuthScope = main.getProperty("bnet.oauth.scope");
-		oAuthApiKey = main.getProperty("bnet.oauth.api-key");
-		oAuthApiSecret = main.getProperty("bnet.oauth.api-secret");
-		oAuthDefaultTokenDuration = Integer.parseInt(main.getProperty("bnet.oauth.default-token-duration"));
-		oAuthAuthRedirectTarget = main.getProperty("bnet.oauth.auth-redirect-target");
+
+		final String oAuthApiKey = main.getProperty("bnet.oauth.api-key");
+		final String oAuthApiSecret = main.getProperty("bnet.oauth.api-secret");
+		final int oAuthDefaultTokenDuration = Integer.parseInt(main.getProperty("bnet.oauth.default-token-duration"));
+		final String oAuthAuthRedirectTarget = main.getProperty("bnet.oauth.auth-redirect-target");
+		final String oAuthScope = main.getProperty("bnet.oauth.scope");
+		battleNetClients = new BattleNetClients(oAuthApiKey, oAuthApiSecret, oAuthDefaultTokenDuration,
+				oAuthAuthRedirectTarget, oAuthScope);
 	}
 
 	private Properties readFile(final Path configDir, final String fileName) {
