@@ -1,5 +1,6 @@
 
 plugins {
+	eclipse
     java
     war
 }
@@ -14,7 +15,11 @@ java {
 }
 
 dependencies {
-	//implementation(project(":lib-abstract-api"))
+	implementation("eu.4fh:abstract-bnet-api") {
+		version {
+			branch = "main"
+		}
+	}
 	implementation("com.github.spotbugs:spotbugs-annotations:4.7.3")
 	implementation("com.zaxxer:HikariCP:5.0.1")
 	implementation("org.json:json:20220924")
