@@ -6,7 +6,11 @@ plugins {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
+}
+
+allprojects {
+    group = "eu.4fh"
 }
 
 java {
