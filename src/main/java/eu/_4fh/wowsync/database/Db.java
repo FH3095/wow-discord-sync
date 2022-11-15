@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
@@ -20,6 +22,7 @@ import eu._4fh.wowsync.database.data.Character;
 import eu._4fh.wowsync.database.data.DiscordOnlineUser;
 import eu._4fh.wowsync.database.data.Guild;
 import eu._4fh.wowsync.database.data.RemoteSystem;
+import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 import eu._4fh.wowsync.util.Config;
 import eu._4fh.wowsync.util.MacCalculator;
 import eu._4fh.wowsync.util.Singletons;
@@ -42,6 +45,8 @@ public class Db {
 	public final AccountRemoteIdQueries accountRemoteIds = new AccountRemoteIdQueries();
 	public final GuildQueries guilds = new GuildQueries();
 	public final RemoteSystemQueries remoteSystems = new RemoteSystemQueries();
+	public final RemoteSystemRankToGroupQueries remoteSystemRankToGroup = new RemoteSystemRankToGroupQueries();
+	public final GroupedQueries groupedQueries = new GroupedQueries();
 
 	private Db() {
 		sessionFactory = Singletons.instance(Config.class).hibernateSessionFactory;
@@ -254,10 +259,38 @@ public class Db {
 			}
 		}
 
-		public RemoteSystem byTypeAndRemoteId(final RemoteSystem.RemoteSystemType type, final long id) {
+		public RemoteSystem byTypeAndRemoteId(final RemoteSystem.RemoteSystemType type, final long systemId) {
 			try (TransCnt trans = createTransaction()) {
 				return createQuery(trans, NamedQueries.remoteSystemByTypeAndRemoteId).setParameter("type", type)
-						.setParameter("systemId", id).getSingleResult();
+						.setParameter("systemId", systemId).getSingleResult();
+			}
+		}
+	}
+
+	public final class RemoteSystemRankToGroupQueries {
+		private RemoteSystemRankToGroupQueries() {
+		}
+
+		public List<RemoteSystemRankToGroup> byRemoteSystem(final RemoteSystem remoteSystem) {
+			try (TransCnt trans = createTransaction()) {
+				return createQuery(trans, NamedQueries.remoteSystemRankToGroupByRemoteSystem)
+						.setParameter("remoteSystem", remoteSystem).getResultList();
+			}
+		}
+	}
+
+	public final class GroupedQueries {
+		private GroupedQueries() {
+		}
+
+		public Map<Long, Byte> remoteIdAndMinGuildRankByGuild(final RemoteSystem remoteSystem) {
+			final String jpql = "SELECT ari.remoteId, MIN(c.rank) FROM AccountRemoteId ari INNER JOIN Character c ON ari.account = c.account WHERE ari.remoteSystem = :remoteSystem AND c.guild = :guild GROUP BY ari.remoteId";
+			try (TransCnt trans = createTransaction()) {
+				final TypedQuery<Object[]> query = trans.em.createQuery(jpql, Object[].class);
+				final Stream<Object[]> stream = query.setParameter("remoteSystem", remoteSystem)
+						.setParameter("guild", remoteSystem.guild).getResultStream();
+				return stream.collect(Collectors.toUnmodifiableMap(result -> ((Number) result[0]).longValue(),
+						result -> ((Number) result[1]).byteValue()));
 			}
 		}
 	}

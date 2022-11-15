@@ -11,6 +11,7 @@ import eu._4fh.wowsync.database.data.Character;
 import eu._4fh.wowsync.database.data.DiscordOnlineUser;
 import eu._4fh.wowsync.database.data.Guild;
 import eu._4fh.wowsync.database.data.RemoteSystem;
+import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 
 @DefaultAnnotation(NonNull.class)
 /*package*/ class NamedQueries {
@@ -108,4 +109,8 @@ import eu._4fh.wowsync.database.data.RemoteSystem;
 
 	public static final NamedQuery<Character> charactersByAccountAndGuild = new NamedQuery<>(Character.class,
 			"byAccountAndGuild", "SELECT c FROM Character c WHERE c.account = :account AND c.guild = :guild");
+
+	public static final NamedQuery<RemoteSystemRankToGroup> remoteSystemRankToGroupByRemoteSystem = new NamedQuery<>(
+			RemoteSystemRankToGroup.class, "ByRemoteSystem",
+			"SELECT rsrtg FROM RemoteSystemRankToGroup rsrtg WHERE rsrtg.remoteSystem = :remoteSystem");
 }

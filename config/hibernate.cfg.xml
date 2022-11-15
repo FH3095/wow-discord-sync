@@ -9,14 +9,14 @@
 		<property name="cache.provider_class">org.hibernate.cache.internal.NoCacheProvider</property>
 
 		<!-- Echo all executed SQL to stdout -->
-		<property name="show_sql">false</property>
+		<property name="show_sql">true</property>
 		
-		<property name="javax.persistence.schema-generation.database.action">create</property>
+		<property name="jakarta.persistence.schema-generation.database.action">create</property>
 
 <!-- 		<property name="dialect">org.hibernate.dialect.MariaDB103Dialect</property> -->
 		<property name="dialect">org.hibernate.dialect.HSQLDialect</property>
 
-<!-- 		<property name="javax.persistence.schema-generation.scripts.action">create</property> -->
-<!-- 		<property name="javax.persistence.schema-generation.scripts.create-target">create.sql</property> -->
+<!-- 		<property name="jakarta.persistence.schema-generation.scripts.action">create</property> -->
+<!-- 		<property name="jakarta.persistence.schema-generation.scripts.create-target">create.sql</property> -->
 	</session-factory>
 </hibernate-configuration>

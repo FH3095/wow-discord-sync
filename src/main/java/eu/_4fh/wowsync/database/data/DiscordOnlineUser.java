@@ -1,6 +1,7 @@
 package eu._4fh.wowsync.database.data;
 
 import java.util.Date;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,5 +35,27 @@ public class DiscordOnlineUser {
 		this.guildId = guildId;
 		this.memberId = memberId;
 		this.lastOnline = lastOnline;
+	}
+
+	@Override
+	public String toString() {
+		return "DiscordOnlineUser [guildId=" + guildId + ", memberId=" + memberId + ", lastOnline=" + lastOnline + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(guildId, memberId);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof DiscordOnlineUser)) {
+			return false;
+		}
+		DiscordOnlineUser other = (DiscordOnlineUser) obj;
+		return guildId == other.guildId && memberId == other.memberId;
 	}
 }

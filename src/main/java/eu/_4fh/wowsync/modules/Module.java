@@ -15,7 +15,7 @@ public interface Module extends ClosableSingleton {
 		public final Set<String> toAdd;
 		public final Set<String> toRemove;
 
-		private RoleChange(final Set<String> toAdd, final Set<String> toRemove) {
+		public RoleChange(final Set<String> toAdd, final Set<String> toRemove) {
 			this.toAdd = Collections.unmodifiableSet(new HashSet<>(toAdd));
 			this.toRemove = Collections.unmodifiableSet(new HashSet<>(toRemove));
 		}

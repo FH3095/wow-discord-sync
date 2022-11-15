@@ -68,7 +68,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 	@Override
 	public void onGuildReady(final GuildReadyEvent event) {
 		event.getGuild().findMembers(m -> onlineStates.contains(m.getOnlineStatus())).onSuccess(members -> {
-			final Set<Long> memberIds = members.stream().map(member -> member.getIdLong()).collect(Collectors.toSet());
+			final Set<Long> memberIds = members.stream().map(Member::getIdLong).collect(Collectors.toSet());
 			db.discordOnlineUsers.updateLastOnline(event.getGuild().getIdLong(), memberIds);
 		});
 	}
@@ -89,8 +89,8 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 		event.getUser().openPrivateChannel().queue(channel -> {
 			channel.sendMessage(getAuthenticateStartText(event.getGuild().getIdLong(), event.getUserIdLong())).queue();
 			event.getGuild().findMembers(member -> member.getRoles().isEmpty())
-					.onSuccess(list -> channel.sendMessage(
-							list.stream().map(member -> member.getEffectiveName()).collect(Collectors.joining(", ")))
+					.onSuccess(list -> channel
+							.sendMessage(list.stream().map(Member::getEffectiveName).collect(Collectors.joining(", ")))
 							.queue());
 		});
 	}
@@ -121,8 +121,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 		final Map<Long, Set<String>> result = new HashMap<>();
 		final List<Member> members = jda.getGuildById(guildId).findMembers(m -> true).get();
 		for (final Member member : members) {
-			final Set<String> roles = member.getRoles().stream().map(role -> role.getName())
-					.collect(Collectors.toSet());
+			final Set<String> roles = member.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
 			result.put(member.getIdLong(), Collections.unmodifiableSet(roles));
 		}
 		return result;
@@ -131,7 +130,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 	public Set<String> getRolesForUser(final long guildId, final long userId) {
 		try {
 			return Collections.unmodifiableSet(jda.getGuildById(guildId).retrieveMemberById(userId).submit().get()
-					.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet()));
+					.getRoles().stream().map(Role::getName).collect(Collectors.toSet()));
 		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);
 		}

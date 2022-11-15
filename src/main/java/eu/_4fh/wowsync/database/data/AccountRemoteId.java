@@ -1,5 +1,7 @@
 package eu._4fh.wowsync.database.data;
 
+import java.util.Objects;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,4 +27,27 @@ public class AccountRemoteId {
 
 	@Column(name = "remote_id", nullable = false)
 	public long remoteId;
+
+	@Override
+	public String toString() {
+		return "AccountRemoteId [account=" + account + ", remoteSystem=" + remoteSystem + ", remoteId=" + remoteId
+				+ "]";
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(account, remoteSystem);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof AccountRemoteId)) {
+			return false;
+		}
+		AccountRemoteId other = (AccountRemoteId) obj;
+		return Objects.equals(account, other.account) && Objects.equals(remoteSystem, other.remoteSystem);
+	}
 }
