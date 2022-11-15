@@ -35,6 +35,7 @@ import eu._4fh.wowsync.database.data.RemoteSystem;
 import eu._4fh.wowsync.rest.helper.HtmlHelper;
 import eu._4fh.wowsync.rest.providers.RequiredParameterFilter.RequiredParam;
 import eu._4fh.wowsync.sync.BattleNetToDbSync;
+import eu._4fh.wowsync.sync.DbToModuleSync;
 import eu._4fh.wowsync.util.Config;
 import eu._4fh.wowsync.util.MacCalculator;
 import eu._4fh.wowsync.util.Singletons;
@@ -45,7 +46,7 @@ public class Auth {
 	@DefaultAnnotation(NonNull.class)
 	private static final class AuthInformations implements Serializable {
 		private static final long serialVersionUID = 2781228208547364912L;
-		public static final String sessionKey = "bnetAuthInformations";
+		private static final String sessionKey = "bnetAuthInformations";
 
 		public final long remoteSystemId;
 		public final long remoteUserId;
@@ -131,13 +132,14 @@ public class Auth {
 		}
 
 		final RemoteSystem remoteSystem = db.remoteSystems.byId(authInformations.remoteSystemId);
-		final URI redirectTo = Singletons.instance(BattleNetToDbSync.class).authFinished(remoteSystem,
-				authInformations.remoteUserId, client);
+		final URI redirectTo = new BattleNetToDbSync().authFinished(remoteSystem, authInformations.remoteUserId,
+				client);
+		final boolean added = new DbToModuleSync(remoteSystem).syncForUser(authInformations.remoteUserId);
 		try {
-			log.info("Auth finished for {} to {}#{}. Token {} valid until {} for {}. Redirecting to {}",
+			log.info("Auth finished for {} to {}#{}. Token {} valid until {} for {}. Added {}. Redirecting to {}",
 					authInformations.remoteUserId, remoteSystem.type.name(), remoteSystem.id,
 					client.getAccessToken().accessToken(), client.getAccessToken().expirationDate(),
-					client.getAccessToken().scope(), redirectTo);
+					client.getAccessToken().scope(), added, redirectTo);
 		} catch (ProtocolException e) {
 			log.error("Cant get token informations", e);
 		}

@@ -4,9 +4,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Key;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hc.core5.net.URIBuilder;
 
@@ -37,7 +37,7 @@ public class ModuleService implements ClosableSingleton {
 	}
 
 	private Map<Pair<RemoteSystemType, Long>, Module> startModules() {
-		final Map<Pair<RemoteSystemType, Long>, Module> tmp = new HashMap<>();
+		final Map<Pair<RemoteSystemType, Long>, Module> tmp = new ConcurrentHashMap<>();
 
 		final List<RemoteSystem> systems = db.remoteSystems.all();
 		for (final RemoteSystem system : systems) {
