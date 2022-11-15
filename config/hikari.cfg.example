@@ -3,5 +3,5 @@
 driverClassName=org.mariadb.jdbc.Driver
 jdbcUrl=jdbc:mariadb://localhost:3306/testdb
 
-username=testdb
+username=testuser
 password=123456
