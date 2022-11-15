@@ -28,7 +28,8 @@ dependencies {
         exclude("club.minnced", "opus-java")
     }
 	implementation("com.github.spotbugs:spotbugs-annotations:4.7.3")
-	implementation("org.reflections:reflections:0.10.2")
+	//implementation("com.google.guava:guava:31.1-jre")
+	//implementation("org.reflections:reflections:0.10.2")
 	implementation("com.zaxxer:HikariCP:5.0.1")
 	implementation("org.hibernate.orm:hibernate-core:6.1.5.Final")
 	implementation("org.apache.httpcomponents.core5:httpcore5:5.1.4")

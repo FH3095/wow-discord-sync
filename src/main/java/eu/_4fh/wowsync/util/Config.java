@@ -20,7 +20,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
-import org.reflections.Reflections;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -33,7 +32,13 @@ import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
 import edu.umd.cs.findbugs.annotations.DischargesObligation;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import eu._4fh.abstract_bnet_api.oauth2.BattleNetClients;
-import jakarta.persistence.Entity;
+import eu._4fh.wowsync.database.data.Account;
+import eu._4fh.wowsync.database.data.AccountRemoteId;
+import eu._4fh.wowsync.database.data.Character;
+import eu._4fh.wowsync.database.data.DiscordOnlineUser;
+import eu._4fh.wowsync.database.data.Guild;
+import eu._4fh.wowsync.database.data.RemoteSystem;
+import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 import jakarta.persistence.EntityManagerFactory;
 
 @DefaultAnnotation(NonNull.class)
@@ -79,10 +84,7 @@ public class Config implements ClosableSingleton {
 		final StandardServiceRegistry hibernateRegistry = new StandardServiceRegistryBuilder()
 				.configure(configDir.resolve("hibernate.cfg.xml").toFile())
 				.applySetting(Environment.DATASOURCE, dataSource).build();
-		final Reflections reflections = new Reflections("eu._4fh.wowsync");
-		final Class<?>[] entityClasses = reflections.getTypesAnnotatedWith(Entity.class)
-				.toArray(size -> new Class<?>[size]);
-		hibernateSessionFactory = new MetadataSources(hibernateRegistry).addAnnotatedClasses(entityClasses)
+		hibernateSessionFactory = new MetadataSources(hibernateRegistry).addAnnotatedClasses(getEntityClasses())
 				.buildMetadata().buildSessionFactory();
 
 		final Properties main = readFile(configDir, "main.cfg");
@@ -120,6 +122,42 @@ public class Config implements ClosableSingleton {
 			LoggerFactory.getLogger(getClass()).error("Cant read style.css", e);
 			throw new RuntimeException(e);
 		}
+	}
+
+	private Class<?>[] getEntityClasses() {
+		//final String rootPackage = "eu._4fh.wowsync.database.data";
+		// org.reflections (doesnt work on server)
+		/*final Reflections reflections = new Reflections(rootPackage);
+		return reflections.getTypesAnnotatedWith(Entity.class, true).stream().toArray(Class<?>[]::new);*/
+
+		// Pure Java (only works for concrete package)
+		/*final UnaryOperator<String> getClassNameFromFileName = filename -> filename.substring(0,
+				filename.lastIndexOf('.'));
+		try (final BufferedReader reader = new BufferedReader(new InputStreamReader(
+				ClassLoader.getSystemClassLoader().getResourceAsStream(rootPackage.replace('.', '/'))))) {
+			final Class<?>[] result = reader.lines().filter(line -> line.endsWith(".class"))
+					.map(getClassNameFromFileName::apply).map(line -> {
+						try {
+							return Class.forName(rootPackage + "." + line);
+						} catch (ClassNotFoundException e) {
+							throw new RuntimeException(e);
+						}
+					}).toArray(Class<?>[]::new);
+			LoggerFactory.getLogger(getClass()).debug("Found entity classes: {}", (Object[]) result);
+			return result;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}*/
+
+		// Google Guava
+		/*try {
+			return ClassPath.from(getClass().getClassLoader()).getTopLevelClassesRecursive(rootPackage).stream()
+					.map(ClassInfo::load).filter(c -> c.isAnnotationPresent(Entity.class)).toArray(Class<?>[]::new);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}*/
+		return new Class<?>[] { Account.class, AccountRemoteId.class, Character.class, DiscordOnlineUser.class,
+				Guild.class, RemoteSystem.class, RemoteSystemRankToGroup.class };
 	}
 
 	private Properties readFile(final Path configDir, final String fileName) {
