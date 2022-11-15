@@ -15,8 +15,5 @@
 
 <!-- 		<property name="dialect">org.hibernate.dialect.MariaDB103Dialect</property> -->
 		<property name="dialect">org.hibernate.dialect.HSQLDialect</property>
-
-<!-- 		<property name="jakarta.persistence.schema-generation.scripts.action">create</property> -->
-<!-- 		<property name="jakarta.persistence.schema-generation.scripts.create-target">create.sql</property> -->
 	</session-factory>
 </hibernate-configuration>
