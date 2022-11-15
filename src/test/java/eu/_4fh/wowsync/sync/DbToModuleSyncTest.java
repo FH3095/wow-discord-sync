@@ -2,17 +2,27 @@ package eu._4fh.wowsync.sync;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 
 import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.easymock.Capture;
+import org.easymock.CaptureType;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.Test;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import eu._4fh.abstract_bnet_api.oauth2.BattleNetRegion;
 import eu._4fh.wowsync.database.Db;
 import eu._4fh.wowsync.database.Transaction.TransCnt;
+import eu._4fh.wowsync.database.data.Account;
+import eu._4fh.wowsync.database.data.AccountRemoteId;
+import eu._4fh.wowsync.database.data.Character;
 import eu._4fh.wowsync.database.data.Guild;
 import eu._4fh.wowsync.database.data.RemoteSystem;
 import eu._4fh.wowsync.database.data.RemoteSystem.RemoteSystemType;
@@ -140,5 +150,96 @@ class DbToModuleSyncTest implements TestBase {
 		assertThat(change).isNotNull();
 		assertThat(change.toRemove).isEmpty();
 		assertThat(change.toAdd).containsExactlyInAnyOrder(groupName);
+	}
+
+	private Character createCharacter(final long remoteUserId, final @CheckForNull Guild guild) {
+		final Account acc = new Account();
+		acc.setBnetId(nextId());
+		acc.setBnetTag(nextStr());
+		acc.setAdded(new Date());
+		final AccountRemoteId ari = new AccountRemoteId();
+		ari.account = acc;
+		ari.remoteSystem = remoteSystem;
+		ari.remoteId = remoteUserId;
+		final Character character = new Character();
+		character.account = acc;
+		character.guild = guild;
+		character.bnetId = nextId();
+		character.region = BattleNetRegion.EU;
+		character.server = nextStr();
+		character.name = nextStr();
+		character.rank = Byte.MAX_VALUE;
+		try (TransCnt trans = db.createTransaction()) {
+			db.save(acc, ari, character);
+			trans.commit();
+			db.refresh(character);
+		}
+		return character;
+	}
+
+	@Test
+	void testSingleUserNoChange() {
+		final long remoteUserId = nextId();
+		createCharacter(remoteUserId, null);
+		final DbToModuleSync sync = new DbToModuleSync(remoteSystem, testModule);
+		final boolean result = sync.syncForUser(remoteUserId);
+		assertThat(result).isFalse();
+	}
+
+	@Test
+	void testSingleUserAdd() {
+		final long remoteUserId = nextId();
+		createCharacter(remoteUserId, remoteSystem.guild);
+
+		final Module module = EasyMock.strictMock(Module.class);
+		expect(module.getRolesForUser(remoteUserId)).andStubReturn(Collections.emptySet());
+		final Capture<Map<Long, RoleChange>> roleChangesCapture = EasyMock.newCapture(CaptureType.ALL);
+		module.changeRoles(EasyMock.capture(roleChangesCapture));
+		expectLastCall();
+		EasyMock.replay(module);
+
+		final DbToModuleSync sync = new DbToModuleSync(remoteSystem, module);
+		final boolean result = sync.syncForUser(remoteUserId);
+		assertThat(result).isTrue();
+		final List<Map<Long, RoleChange>> roleChanges = roleChangesCapture.getValues();
+		assertThat(roleChanges).hasSize(1);
+		final Map<Long, RoleChange> roleChange = roleChanges.get(0);
+		assertThat(roleChange).containsOnlyKeys(remoteUserId);
+		assertThat(roleChange.get(remoteUserId).toRemove).isEmpty();
+		assertThat(roleChange.get(remoteUserId).toAdd).containsExactlyInAnyOrder(MEMBER_GROUP);
+	}
+
+	@Test
+	void testSingleUserModify() {
+		final long remoteUserId = nextId();
+		final String groupName = getClass().getSimpleName() + "NewGroup";
+		final Character character = createCharacter(remoteUserId, remoteSystem.guild);
+		try (TransCnt trans = db.createTransaction()) {
+			db.refresh(character);
+			final RemoteSystemRankToGroup rankGroup = new RemoteSystemRankToGroup();
+			rankGroup.setRemoteSystem(remoteSystem);
+			rankGroup.setGuildRank((byte) 5);
+			rankGroup.setGroupName(groupName);
+			character.rank = 5;
+			db.save(character, rankGroup);
+			trans.commit();
+		}
+
+		final Module module = EasyMock.strictMock(Module.class);
+		expect(module.getRolesForUser(remoteUserId)).andStubReturn(Collections.singleton(MEMBER_GROUP));
+		final Capture<Map<Long, RoleChange>> roleChangesCapture = EasyMock.newCapture(CaptureType.ALL);
+		module.changeRoles(EasyMock.capture(roleChangesCapture));
+		expectLastCall();
+		EasyMock.replay(module);
+
+		final DbToModuleSync sync = new DbToModuleSync(remoteSystem, module);
+		final boolean result = sync.syncForUser(remoteUserId);
+		assertThat(result).isTrue();
+		final List<Map<Long, RoleChange>> roleChanges = roleChangesCapture.getValues();
+		assertThat(roleChanges).hasSize(1);
+		final Map<Long, RoleChange> roleChange = roleChanges.get(0);
+		assertThat(roleChange).containsOnlyKeys(remoteUserId);
+		assertThat(roleChange.get(remoteUserId).toRemove).isEmpty();
+		assertThat(roleChange.get(remoteUserId).toAdd).containsExactlyInAnyOrder(groupName);
 	}
 }

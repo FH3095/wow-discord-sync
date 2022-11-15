@@ -96,6 +96,10 @@ import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 	public static final NamedQuery<Character> charactersByBnetIds = new NamedQuery<>(Character.class, "ByBnetIds",
 			"SELECT c FROM Character c WHERE region = :region AND bnetId IN :bnetIds");
 
+	public static final NamedQuery<Character> charactersbyRemoteSystemAndRemoteId = new NamedQuery<>(Character.class,
+			"ByRemoteSystemAndRemoteId",
+			"SELECT c FROM Character c WHERE c.guild = :guild AND c.account = (SELECT ari.account FROM AccountRemoteId ari WHERE ari.remoteSystem = :remoteSystem AND ari.remoteId = :remoteId)");
+
 	public static final NamedUpdate charactersRemoveGuildReferenceWhereBnetIdNotIn = new NamedUpdate(
 			"charactersRemoveGuildReferenceWhereBnetIdNotIn",
 			"UPDATE Character c SET c.guild = NULL WHERE c.region = :region AND c.guild = :guild AND c.bnetId NOT IN :bnetIds");

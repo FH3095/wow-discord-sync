@@ -194,6 +194,14 @@ public class Db {
 						.setParameter("guild", guild).getResultList();
 			}
 		}
+
+		public List<Character> byGuildAndRemoteSystemAndRemoteId(final Guild guild, final RemoteSystem remoteSystem,
+				final long remoteId) {
+			try (TransCnt trans = createTransaction()) {
+				return createQuery(trans, NamedQueries.charactersbyRemoteSystemAndRemoteId).setParameter("guild", guild)
+						.setParameter("remoteSystem", remoteSystem).setParameter("remoteId", remoteId).getResultList();
+			}
+		}
 	}
 
 	public final class AccountRemoteIdQueries {

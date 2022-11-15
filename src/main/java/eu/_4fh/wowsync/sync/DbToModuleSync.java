@@ -14,6 +14,7 @@ import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import eu._4fh.wowsync.database.Db;
 import eu._4fh.wowsync.database.Transaction;
+import eu._4fh.wowsync.database.data.Character;
 import eu._4fh.wowsync.database.data.RemoteSystem;
 import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 import eu._4fh.wowsync.modules.Module;
@@ -66,6 +67,28 @@ public class DbToModuleSync {
 			}
 			return Collections.unmodifiableMap(result);
 		}
+	}
+
+	public boolean syncForUser(final long remoteUserId) {
+		final @CheckForNull Byte minRank;
+		try (Transaction.TransCnt transaction = db.createTransaction()) {
+			final List<Character> characters = db.characters.byGuildAndRemoteSystemAndRemoteId(remoteSystem.guild,
+					remoteSystem, remoteUserId);
+			minRank = characters.stream().map(c -> c.rank).collect(Collectors.minBy(Comparator.naturalOrder()))
+					.orElse(null);
+		}
+		if (minRank == null) {
+			return false;
+		}
+		final Set<String> actualRoles = module.getRolesForUser(remoteUserId);
+		final Set<String> expectedRoles = rankToGroups.getOrDefault(minRank,
+				Collections.singleton(remoteSystem.memberGroup));
+		final RoleChange change = calculateRoleChanges(actualRoles, expectedRoles);
+		if (change == null || change.toAdd.isEmpty()) {
+			return false;
+		}
+		module.changeRoles(Collections.singletonMap(remoteUserId, change));
+		return true;
 	}
 
 	public void syncToModule() {
