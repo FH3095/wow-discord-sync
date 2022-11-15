@@ -1,0 +1,12 @@
+rootUrl=http://localhost:8080/wowsync/
+
+bnet.oauth.api-key=123
+bnet.oauth.api-secret=456
+bnet.oauth.default-token-duration=1
+bnet.oauth.auth-redirect-target=http://localhost:8080/wowsync/auth/finish
+bnet.rest.num-retries=5
+
+discord.token=789
+
+# For how long to keep accounts when they have no guild
+eu._4fh.wowsync.sync.keepNewAccountsWithoutGuildsForDays=10

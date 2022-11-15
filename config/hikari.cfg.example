@@ -1,0 +1,7 @@
+#driverClassName=org.hsqldb.jdbc.JDBCDriver
+#jdbcUrl=jdbc:hsqldb:mem:testdb
+driverClassName=org.mariadb.jdbc.Driver
+jdbcUrl=jdbc:mariadb://localhost:3306/testdb
+
+username=testdb
+password=123456

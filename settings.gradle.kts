@@ -1,5 +1,5 @@
 
-rootProject.name = "eu._4fh.WowDiscordSync"
+rootProject.name = "wowsync"
 
 sourceControl {
     gitRepository(uri("https://github.com/FH3095/abstract-bnet-api.git")) {

@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+	<session-factory>
+		<!-- SQL dialect -->
+
+		<!-- Disable the second-level cache -->
+		<property name="cache.provider_class">org.hibernate.cache.internal.NoCacheProvider</property>
+
+		<!-- Echo all executed SQL to stdout -->
+		<property name="show_sql">false</property>
+		
+		<property name="javax.persistence.schema-generation.database.action">create</property>
+
+<!-- 		<property name="dialect">org.hibernate.dialect.MariaDB103Dialect</property> -->
+		<property name="dialect">org.hibernate.dialect.HSQLDialect</property>
+
+<!-- 		<property name="javax.persistence.schema-generation.scripts.action">create</property> -->
+<!-- 		<property name="javax.persistence.schema-generation.scripts.create-target">create.sql</property> -->
+	</session-factory>
+</hibernate-configuration>
