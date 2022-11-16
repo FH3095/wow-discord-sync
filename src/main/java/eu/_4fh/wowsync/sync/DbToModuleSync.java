@@ -71,11 +71,14 @@ public class DbToModuleSync {
 
 	public boolean syncForUser(final long remoteUserId) {
 		final @CheckForNull Byte minRank;
+		final List<String> sortedCharnames;
 		try (Transaction.TransCnt transaction = db.createTransaction()) {
 			final List<Character> characters = db.characters.byGuildAndRemoteSystemAndRemoteId(remoteSystem.guild,
 					remoteSystem, remoteUserId);
 			minRank = characters.stream().map(c -> c.rank).collect(Collectors.minBy(Comparator.naturalOrder()))
 					.orElse(null);
+			sortedCharnames = characters.stream().sorted(Comparator.comparingInt(c -> c.rank)).map(c -> c.name)
+					.collect(Collectors.toUnmodifiableList());
 		}
 		if (minRank == null) {
 			return false;
@@ -88,6 +91,7 @@ public class DbToModuleSync {
 			return false;
 		}
 		module.changeRoles(Collections.singletonMap(remoteUserId, change));
+		module.setCharacterNames(remoteUserId, sortedCharnames);
 		return true;
 	}
 

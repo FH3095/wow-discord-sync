@@ -2,6 +2,7 @@ package eu._4fh.wowsync.modules;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,4 +27,6 @@ public interface Module extends ClosableSingleton {
 	Set<String> getRolesForUser(final long userId);
 
 	void changeRoles(final Map<Long, RoleChange> roleChanges);
+
+	void setCharacterNames(final long remoteUserId, final List<String> sortedCharnames);
 }

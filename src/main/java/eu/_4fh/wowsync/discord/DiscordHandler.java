@@ -154,4 +154,9 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 				.flatMap(entry -> entry.getValue().stream()).collect(Collectors.toList());
 
 	}
+
+	public void setNickname(final long guildId, final long userId, final String newNickname) {
+		jda.getGuildById(guildId).retrieveMemberById(userId)
+				.queue(member -> member.modifyNickname(newNickname).queue());
+	}
 }

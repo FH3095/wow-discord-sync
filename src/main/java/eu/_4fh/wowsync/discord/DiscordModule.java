@@ -1,5 +1,6 @@
 package eu._4fh.wowsync.discord;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -43,5 +44,13 @@ public class DiscordModule implements Module {
 	@Override
 	public Set<String> getRolesForUser(final long userId) {
 		return handler.getRolesForUser(remoteSystem.systemId, userId);
+	}
+
+	@Override
+	public void setCharacterNames(final long userId, final List<String> sortedCharnames) {
+		if (sortedCharnames.isEmpty()) {
+			return;
+		}
+		handler.setNickname(remoteSystem.systemId, userId, sortedCharnames.get(0));
 	}
 }
