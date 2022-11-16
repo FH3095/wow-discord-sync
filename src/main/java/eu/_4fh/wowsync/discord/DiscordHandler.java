@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 	private final JDA jda;
 	private final Db db;
+	private final Set<Long> messageReactions = ConcurrentHashMap.newKeySet();
 
 	@CreatesObligation
 	private DiscordHandler() {
@@ -58,8 +60,16 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
-		jda.upsertCommand("bnet-auth", "auth").queue();
+		jda.upsertCommand("bnet-auth", "Authenticates yourself with battlenet").queue();
 		db = Singletons.instance(Db.class);
+	}
+
+	/*package*/ void addMessageToReactTo(final long messageId) {
+		messageReactions.add(messageId);
+	}
+
+	/*package*/ void removeMessageToReactoTo(final long messageId) {
+		messageReactions.remove(messageId);
 	}
 
 	private static final Set<OnlineStatus> onlineStates = Collections
@@ -83,15 +93,13 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 	@Override
 	public void onMessageReactionAdd(final MessageReactionAddEvent event) {
-		if (Long.parseUnsignedLong("1034480439538237590") != event.getMessageIdLong()) {
+		if (!messageReactions.contains(event.getMessageIdLong())) {
 			return;
 		}
+
 		event.getUser().openPrivateChannel().queue(channel -> {
 			channel.sendMessage(getAuthenticateStartText(event.getGuild().getIdLong(), event.getUserIdLong())).queue();
-			event.getGuild().findMembers(member -> member.getRoles().isEmpty())
-					.onSuccess(list -> channel
-							.sendMessage(list.stream().map(Member::getEffectiveName).collect(Collectors.joining(", ")))
-							.queue());
+			channel.delete().queue();
 		});
 	}
 

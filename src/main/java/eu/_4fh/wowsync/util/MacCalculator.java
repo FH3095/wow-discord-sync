@@ -64,4 +64,11 @@ public class MacCalculator {
 			throw new IllegalArgumentException("Invalid MAC");
 		}
 	}
+
+	public static void main(final String[] args) {
+		final Key key = generateKey();
+		final String result = Base64.getEncoder().encodeToString(key.getEncoded());
+		System.out.println("Generated key: ");
+		System.out.println(result);
+	}
 }

@@ -36,6 +36,7 @@ import eu._4fh.wowsync.database.data.Account;
 import eu._4fh.wowsync.database.data.AccountRemoteId;
 import eu._4fh.wowsync.database.data.Character;
 import eu._4fh.wowsync.database.data.DiscordOnlineUser;
+import eu._4fh.wowsync.database.data.DiscordSettings;
 import eu._4fh.wowsync.database.data.Guild;
 import eu._4fh.wowsync.database.data.RemoteSystem;
 import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
@@ -157,7 +158,7 @@ public class Config implements ClosableSingleton {
 			throw new RuntimeException(e);
 		}*/
 		return new Class<?>[] { Account.class, AccountRemoteId.class, Character.class, DiscordOnlineUser.class,
-				Guild.class, RemoteSystem.class, RemoteSystemRankToGroup.class };
+				Guild.class, RemoteSystem.class, RemoteSystemRankToGroup.class, DiscordSettings.class };
 	}
 
 	private Properties readFile(final Path configDir, final String fileName) {

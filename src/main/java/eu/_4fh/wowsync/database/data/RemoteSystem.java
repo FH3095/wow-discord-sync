@@ -1,5 +1,7 @@
 package eu._4fh.wowsync.database.data;
 
+import java.util.Objects;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -61,5 +63,29 @@ public class RemoteSystem {
 
 	public void forTestSetKey(final String key) {
 		this.hmacKey = key;
+	}
+
+	@Override
+	public String toString() {
+		return "RemoteSystem [id=" + id + ", guild=" + guild + ", type=" + type + ", systemId=" + systemId
+				+ ", nameOrLink=" + nameOrLink + ", memberGroup=" + memberGroup + ", formerMemberGroup="
+				+ formerMemberGroup + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof RemoteSystem)) {
+			return false;
+		}
+		RemoteSystem other = (RemoteSystem) obj;
+		return id == other.id;
 	}
 }
