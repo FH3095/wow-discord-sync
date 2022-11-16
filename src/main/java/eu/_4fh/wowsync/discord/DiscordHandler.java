@@ -52,7 +52,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 				.createDefault(Singletons.instance(Config.class).discordToken, GatewayIntent.GUILD_MESSAGE_REACTIONS,
 						GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES)
 				.disableCache(Arrays.asList(CacheFlag.values())).enableCache(CacheFlag.ONLINE_STATUS)
-				.setAutoReconnect(true).setMemberCachePolicy(MemberCachePolicy.OWNER)
+				.setAutoReconnect(true).setMemberCachePolicy(MemberCachePolicy.ONLINE)
 				.setChunkingFilter(ChunkingFilter.NONE).addEventListeners(this).build();
 		try {
 			jda.awaitReady();
