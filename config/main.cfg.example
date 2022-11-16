@@ -6,6 +6,8 @@ bnet.oauth.default-token-duration=1
 bnet.oauth.auth-redirect-target=http://localhost:8080/wowsync/auth/finish
 bnet.rest.num-retries=5
 
+# We need: OAuth2 Scopes bot + applications.commands
+# We need bot permissions: Manage Roles + Kick Members + Change Nickname + Manage Nicknames + Read Messages/View Channels + Read Message History
 discord.token=789
 
 # For how long to keep accounts when they have no guild
