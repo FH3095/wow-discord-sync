@@ -90,8 +90,8 @@ public class DbToModuleSync {
 		if (change == null || change.toAdd.isEmpty()) {
 			return false;
 		}
-		module.changeRoles(Collections.singletonMap(remoteUserId, change));
 		module.setCharacterNames(remoteUserId, sortedCharnames);
+		module.changeRoles(Collections.singletonMap(remoteUserId, change));
 		return true;
 	}
 
