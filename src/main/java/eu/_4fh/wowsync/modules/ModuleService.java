@@ -42,7 +42,7 @@ public class ModuleService implements ClosableSingleton {
 		final List<RemoteSystem> systems = db.remoteSystems.all();
 		for (final RemoteSystem system : systems) {
 			if (RemoteSystemType.Discord.equals(system.type)) {
-				tmp.put(new Pair<>(RemoteSystemType.Discord, system.guild.id()), new DiscordModule(system));
+				tmp.put(new Pair<>(RemoteSystemType.Discord, system.systemId), new DiscordModule(system));
 			} else {
 				throw new IllegalStateException("System-Type " + system.type.name() + " not yet implemented");
 			}

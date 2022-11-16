@@ -28,6 +28,6 @@ public class Cron {
 		for (final RemoteSystem remoteSystem : remoteSystems) {
 			new DbToModuleSync(remoteSystem).syncToModule();
 		}
-		return "Done";
+		return "";
 	}
 }

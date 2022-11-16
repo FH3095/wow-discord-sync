@@ -32,16 +32,16 @@ public class DiscordModule implements Module {
 
 	@Override
 	public Map<Long, Set<String>> getAllUsersWithRoles() {
-		return handler.getAllUsersWithRoles(remoteSystem.guild.id());
+		return handler.getAllUsersWithRoles(remoteSystem.systemId);
 	}
 
 	@Override
 	public void changeRoles(final Map<Long, RoleChange> roleChanges) {
-		handler.changeRole(remoteSystem.guild.id(), roleChanges);
+		handler.changeRole(remoteSystem.systemId, roleChanges);
 	}
 
 	@Override
 	public Set<String> getRolesForUser(final long userId) {
-		return handler.getRolesForUser(remoteSystem.guild.id(), userId);
+		return handler.getRolesForUser(remoteSystem.systemId, userId);
 	}
 }
