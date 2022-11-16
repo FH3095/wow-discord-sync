@@ -117,13 +117,13 @@ public class DbToModuleSync {
 	}
 
 	/*package for test*/ @CheckForNull
-	RoleChange calculateRoleChanges(@CheckForNull Set<String> actualRoles, final Set<String> expectedRoles) {
-		if (actualRoles == null) {
+	RoleChange calculateRoleChanges(final @CheckForNull Set<String> allActualRoles, final Set<String> expectedRoles) {
+		if (allActualRoles == null) {
 			// We cant set any roles, because the user isnt on the server anymore.
 			return null;
 		}
 
-		actualRoles = new HashSet<>(actualRoles);
+		final Set<String> actualRoles = new HashSet<>(allActualRoles);
 		// First we remove all roles that we dont manage
 		actualRoles.retainAll(allGroups);
 
@@ -141,6 +141,9 @@ public class DbToModuleSync {
 		final Set<String> toRemove = new HashSet<>(actualRoles);
 		// Remove all roles that are expected
 		toRemove.removeAll(expectedRoles);
+		if (remoteSystem.formerMemberGroup != null && allActualRoles.contains(remoteSystem.formerMemberGroup)) {
+			toRemove.add(remoteSystem.formerMemberGroup);
+		}
 		return new RoleChange(toAdd, toRemove);
 	}
 }

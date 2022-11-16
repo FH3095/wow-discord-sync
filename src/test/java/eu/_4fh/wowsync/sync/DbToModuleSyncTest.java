@@ -34,6 +34,7 @@ import eu._4fh.wowsync.util.TestBase;
 
 class DbToModuleSyncTest implements TestBase {
 	private final String MEMBER_GROUP = getClass().getSimpleName() + "MemberGroup";
+	private final String FORMER_MEMBER_GROUP = getClass().getSimpleName() + "FormerMemberGroup";
 
 	private final Db db = Singletons.instance(Db.class);
 	private final Module testModule;
@@ -52,6 +53,7 @@ class DbToModuleSyncTest implements TestBase {
 		final RemoteSystem remoteSystem = new RemoteSystem();
 		remoteSystem.guild = guild;
 		remoteSystem.memberGroup = MEMBER_GROUP;
+		remoteSystem.formerMemberGroup = FORMER_MEMBER_GROUP;
 		remoteSystem.nameOrLink = nextStr();
 		remoteSystem.type = RemoteSystemType.Discord;
 		remoteSystem.systemId = nextId();
@@ -103,7 +105,7 @@ class DbToModuleSyncTest implements TestBase {
 				Collections.emptySet());
 		assertThat(change).isNotNull();
 		assertThat(change.toRemove).containsExactlyInAnyOrder(MEMBER_GROUP);
-		assertThat(change.toAdd).isEmpty();
+		assertThat(change.toAdd).containsExactlyInAnyOrder(FORMER_MEMBER_GROUP);
 	}
 
 	@Test
@@ -126,9 +128,10 @@ class DbToModuleSyncTest implements TestBase {
 	@Test
 	void testCalculateRolesForNewUser() {
 		final DbToModuleSync sync = new DbToModuleSync(remoteSystem, testModule);
-		final RoleChange change = sync.calculateRoleChanges(Collections.emptySet(), Set.of(MEMBER_GROUP, "group1"));
+		final RoleChange change = sync.calculateRoleChanges(Collections.singleton(FORMER_MEMBER_GROUP),
+				Set.of(MEMBER_GROUP, "group1"));
 		assertThat(change).isNotNull();
-		assertThat(change.toRemove).isEmpty();
+		assertThat(change.toRemove).containsExactlyInAnyOrder(FORMER_MEMBER_GROUP);
 		assertThat(change.toAdd).containsExactlyInAnyOrder(MEMBER_GROUP, "group1");
 	}
 
