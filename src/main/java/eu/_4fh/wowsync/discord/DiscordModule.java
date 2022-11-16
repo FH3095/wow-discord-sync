@@ -20,7 +20,7 @@ public class DiscordModule implements Module {
 
 	public DiscordModule(final RemoteSystem remoteSystem) {
 		this.remoteSystem = remoteSystem;
-		settings = Singletons.instance(Db.class).find(DiscordSettings.class, remoteSystem);
+		settings = Singletons.instance(Db.class).find(DiscordSettings.class, remoteSystem.id);
 		handler = Singletons.instance(DiscordHandler.class);
 		Optional.ofNullable(settings.reactionMessageId()).ifPresent(handler::addMessageToReactTo);
 	}
