@@ -1,7 +1,6 @@
 package eu._4fh.wowsync.discord;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -51,9 +50,10 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 		jda = JDABuilder
 				.createDefault(Singletons.instance(Config.class).discordToken, GatewayIntent.GUILD_MESSAGE_REACTIONS,
 						GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES)
-				.disableCache(Arrays.asList(CacheFlag.values())).enableCache(CacheFlag.ONLINE_STATUS)
-				.setAutoReconnect(true).setMemberCachePolicy(MemberCachePolicy.ONLINE)
-				.setChunkingFilter(ChunkingFilter.NONE).addEventListeners(this).build();
+				.disableCache(CacheFlag.VOICE_STATE, CacheFlag.EMOJI, CacheFlag.STICKER, CacheFlag.SCHEDULED_EVENTS)
+				.enableCache(CacheFlag.ONLINE_STATUS).setAutoReconnect(true)
+				.setMemberCachePolicy(MemberCachePolicy.ONLINE).setChunkingFilter(ChunkingFilter.NONE)
+				.addEventListeners(this).build();
 		try {
 			jda.awaitReady();
 		} catch (InterruptedException e) {
@@ -76,7 +76,9 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 	@Override
 	public void onUserUpdateOnlineStatus(final UserUpdateOnlineStatusEvent event) {
-		if (onlineStates.contains(event.getNewOnlineStatus())) {
+		// We have to test for user going offline, because to fire this event the user has to be cached before.
+		// And we only cache online users.
+		if (onlineStates.contains(event.getOldOnlineStatus())) {
 			db.discordOnlineUsers.updateLastOnline(event.getGuild().getIdLong(), event.getMember().getIdLong(),
 					event.getMember().getEffectiveName());
 		}
