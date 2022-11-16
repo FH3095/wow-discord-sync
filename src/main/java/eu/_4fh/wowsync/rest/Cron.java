@@ -20,7 +20,7 @@ import eu._4fh.wowsync.util.Singletons;
 public class Cron {
 
 	@GET
-	@Path("start")
+	@Path("run")
 	@Produces(MediaType.TEXT_PLAIN)
 	public String run() {
 		new BattleNetToDbSync().updateAndDeleteAccounts();
