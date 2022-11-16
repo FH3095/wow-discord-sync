@@ -29,7 +29,6 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.user.update.UserUpdateOnlineStatusEvent;
@@ -74,14 +73,6 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 	private static final Set<OnlineStatus> onlineStates = Collections
 			.unmodifiableSet(EnumSet.of(OnlineStatus.ONLINE, OnlineStatus.IDLE, OnlineStatus.DO_NOT_DISTURB));
-
-	@Override
-	public void onGuildReady(final GuildReadyEvent event) {
-		event.getGuild().findMembers(m -> onlineStates.contains(m.getOnlineStatus())).onSuccess(members -> {
-			final Set<Long> memberIds = members.stream().map(Member::getIdLong).collect(Collectors.toSet());
-			db.discordOnlineUsers.updateLastOnline(event.getGuild().getIdLong(), memberIds);
-		});
-	}
 
 	@Override
 	public void onUserUpdateOnlineStatus(final UserUpdateOnlineStatusEvent event) {
