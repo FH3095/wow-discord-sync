@@ -77,8 +77,8 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 	@Override
 	public void onUserUpdateOnlineStatus(final UserUpdateOnlineStatusEvent event) {
 		if (onlineStates.contains(event.getNewOnlineStatus())) {
-			db.discordOnlineUsers.updateLastOnline(event.getGuild().getIdLong(),
-					Collections.singleton(event.getMember().getIdLong()));
+			db.discordOnlineUsers.updateLastOnline(event.getGuild().getIdLong(), event.getMember().getIdLong(),
+					event.getMember().getEffectiveName());
 		}
 	}
 

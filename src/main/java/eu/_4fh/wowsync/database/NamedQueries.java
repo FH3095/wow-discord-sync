@@ -53,10 +53,6 @@ import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 		return Collections.unmodifiableList(allUpdates);
 	}
 
-	public static final NamedQuery<Long> discordOnlineUsersByGuildAndMemberIdsOnlyMemberId = new NamedQuery<>(
-			Long.class, "ByGuildAndMemberIdsOnlyMemberId",
-			"SELECT dou.memberId FROM DiscordOnlineUser dou WHERE dou.guildId = :guildId AND dou.memberId IN :memberIds");
-
 	public static final NamedQuery<DiscordOnlineUser> discordOnlineUsersByGuildAndLastOnlineLessThan = new NamedQuery<>(
 			DiscordOnlineUser.class, "ByGuildAndLastOnlineLessThan",
 			"SELECT dou FROM DiscordOnlineUser dou WHERE dou.guildId = :guildId AND dou.lastOnline <= :date");

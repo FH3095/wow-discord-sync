@@ -3,11 +3,9 @@ package eu._4fh.wowsync.database;
 import java.security.Key;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -96,20 +94,17 @@ public class Db {
 		private DiscordOnlineUserQueries() {
 		}
 
-		public void updateLastOnline(final long guildId, final Set<Long> memberIds) {
+		public void updateLastOnline(final long guildId, final long memberId, final String memberName) {
 			final Date now = new Date();
 			try (final TransCnt trans = createTransaction()) {
-				final Set<Long> alreadyExistentMembers = createQuery(trans,
-						NamedQueries.discordOnlineUsersByGuildAndMemberIdsOnlyMemberId).setParameter("guildId", guildId)
-								.setParameter("memberIds", memberIds).getResultStream().collect(Collectors.toSet());
-				final Set<Long> notExistentMembers = new HashSet<>(memberIds);
-				notExistentMembers.removeAll(alreadyExistentMembers);
-				for (final long memberId : notExistentMembers) {
-					trans.em.persist(new DiscordOnlineUser(guildId, memberId, now));
+				final DiscordOnlineUser newUser = new DiscordOnlineUser(guildId, memberId, memberName, now);
+				final @CheckForNull DiscordOnlineUser existingUser = trans.em.find(DiscordOnlineUser.class, newUser);
+				if (existingUser == null) {
+					trans.em.persist(newUser);
+				} else {
+					existingUser.lastOnline = now;
+					trans.em.persist(existingUser);
 				}
-				createUpdate(trans, NamedQueries.discordOnlineUsersUpdateLastOnline).setParameter("guildId", guildId)
-						.setParameter("memberIds", alreadyExistentMembers)
-						.setParameter("now", now, TemporalType.TIMESTAMP).executeUpdate();
 				trans.commit();
 			}
 		}

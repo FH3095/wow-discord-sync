@@ -12,7 +12,9 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 @Entity
-@Table(name = "discord_online_users", indexes = @Index(name = "idx_discord_online_users_guild_id", columnList = "guild_id"))
+@Table(name = "discord_online_users", indexes = {
+		@Index(name = "idx_discord_online_users_guild_id", columnList = "guild_id"),
+		@Index(name = "idx_discord_online_users_last_online", columnList = "last_online") })
 public class DiscordOnlineUser {
 	@Id
 	@Column(name = "guild_id", nullable = false)
@@ -21,6 +23,9 @@ public class DiscordOnlineUser {
 	@Id
 	@Column(name = "member_id", nullable = false)
 	public long memberId;
+
+	@Column(name = "member_name", nullable = false)
+	public String memberName;
 
 	@Column(name = "last_online", nullable = false)
 	@Temporal(TemporalType.TIMESTAMP)
@@ -31,15 +36,17 @@ public class DiscordOnlineUser {
 		// Used by Hibernate
 	}
 
-	public DiscordOnlineUser(final long guildId, final long memberId, final Date lastOnline) {
+	public DiscordOnlineUser(final long guildId, final long memberId, final String memberName, final Date lastOnline) {
 		this.guildId = guildId;
 		this.memberId = memberId;
+		this.memberName = memberName;
 		this.lastOnline = lastOnline;
 	}
 
 	@Override
 	public String toString() {
-		return "DiscordOnlineUser [guildId=" + guildId + ", memberId=" + memberId + ", lastOnline=" + lastOnline + "]";
+		return "DiscordOnlineUser [guildId=" + guildId + ", memberId=" + memberId + ", memberName=" + memberName
+				+ ", lastOnline=" + lastOnline + "]";
 	}
 
 	@Override

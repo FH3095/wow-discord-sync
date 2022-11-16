@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
@@ -38,9 +37,11 @@ class DbTest implements TestBase {
 		final Date tomorrow = new Date(new Date().getTime() + TimeUnit.DAYS.toMillis(1));
 
 		assertThat(db.discordOnlineUsers.getLastOnlineBefore(guildId, tomorrow)).isEmpty();
-		db.discordOnlineUsers.updateLastOnline(guildId, Set.of(user1Id, user2Id));
+		db.discordOnlineUsers.updateLastOnline(guildId, user1Id, Long.toString(user1Id));
+		db.discordOnlineUsers.updateLastOnline(guildId, user2Id, Long.toString(user2Id));
 		TimeUnit.SECONDS.sleep(2);
-		db.discordOnlineUsers.updateLastOnline(guildId, Set.of(user2Id, user3Id));
+		db.discordOnlineUsers.updateLastOnline(guildId, user2Id, Long.toString(user2Id));
+		db.discordOnlineUsers.updateLastOnline(guildId, user3Id, Long.toString(user3Id));
 		final List<DiscordOnlineUser> users = db.discordOnlineUsers.getLastOnlineBefore(guildId, tomorrow);
 		assertThat(users).hasSize(3);
 		final Date userOneDate = users.stream().filter(dou -> dou.memberId == user1Id).findAny().get().lastOnline;
