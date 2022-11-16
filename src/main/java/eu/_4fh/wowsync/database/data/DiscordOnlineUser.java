@@ -24,7 +24,7 @@ public class DiscordOnlineUser {
 	@Column(name = "member_id", nullable = false)
 	public long memberId;
 
-	@Column(name = "member_name", nullable = false)
+	@Column(name = "member_name", nullable = false, length = 64)
 	public String memberName;
 
 	@Column(name = "last_online", nullable = false)
