@@ -193,7 +193,7 @@ public class BattleNetToDbSync {
 		final Date charactersLimitDate = Date
 				.from(Instant.now().minus(config.keepCharactersWithAccountButWithoutGuildForDays, ChronoUnit.DAYS));
 		final int deletedCharacters = db.characters.deleteWithoutGuildAndAccountLastUpdateBefore(charactersLimitDate);
-		log.debug("Removed {} characters with account but withoug guild", deletedCharacters);
+		log.debug("Removed {} characters with account but without guild", deletedCharacters);
 	}
 
 	/*package for test*/ Account insertOrUpdateAccount(final BattleNetProfileInfo profileInfo) {
