@@ -196,6 +196,8 @@ class DbToModuleSyncTest implements TestBase {
 
 		final Module module = EasyMock.strictMock(Module.class);
 		expect(module.getRolesForUser(remoteUserId)).andStubReturn(Collections.emptySet());
+		module.setCharacterNames(EasyMock.eq(remoteUserId), EasyMock.anyObject());
+		expectLastCall();
 		final Capture<Map<Long, RoleChange>> roleChangesCapture = EasyMock.newCapture(CaptureType.ALL);
 		module.changeRoles(EasyMock.capture(roleChangesCapture));
 		expectLastCall();
@@ -203,6 +205,7 @@ class DbToModuleSyncTest implements TestBase {
 
 		final DbToModuleSync sync = new DbToModuleSync(remoteSystem, module);
 		final boolean result = sync.syncForUser(remoteUserId);
+		EasyMock.verify(module);
 		assertThat(result).isTrue();
 		final List<Map<Long, RoleChange>> roleChanges = roleChangesCapture.getValues();
 		assertThat(roleChanges).hasSize(1);
@@ -230,6 +233,8 @@ class DbToModuleSyncTest implements TestBase {
 
 		final Module module = EasyMock.strictMock(Module.class);
 		expect(module.getRolesForUser(remoteUserId)).andStubReturn(Collections.singleton(MEMBER_GROUP));
+		module.setCharacterNames(EasyMock.eq(remoteUserId), EasyMock.anyObject());
+		expectLastCall();
 		final Capture<Map<Long, RoleChange>> roleChangesCapture = EasyMock.newCapture(CaptureType.ALL);
 		module.changeRoles(EasyMock.capture(roleChangesCapture));
 		expectLastCall();
@@ -237,6 +242,7 @@ class DbToModuleSyncTest implements TestBase {
 
 		final DbToModuleSync sync = new DbToModuleSync(remoteSystem, module);
 		final boolean result = sync.syncForUser(remoteUserId);
+		EasyMock.verify(module);
 		assertThat(result).isTrue();
 		final List<Map<Long, RoleChange>> roleChanges = roleChangesCapture.getValues();
 		assertThat(roleChanges).hasSize(1);
