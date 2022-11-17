@@ -7,7 +7,8 @@ bnet.oauth.auth-redirect-target=http://localhost:8080/wowsync/auth/finish
 bnet.rest.num-retries=5
 
 # We need: OAuth2 Scopes bot + applications.commands
-# We need bot permissions: Manage Roles + Kick Members + Change Nickname + Manage Nicknames + Read Messages/View Channels + Read Message History
+# We need bot permissions: Manage Roles + Change Nickname + Manage Nicknames + Read Messages/View Channels + Read Message History
+# https://discord.com/api/oauth2/authorize?client_id=1031634230754684948&permissions=469828608&scope=applications.commands%20bot
 discord.token=789
 
 # For how long to keep accounts when they have no guild
