@@ -2,7 +2,6 @@ package eu._4fh.wowsync.discord;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +24,6 @@ import eu._4fh.wowsync.util.Config;
 import eu._4fh.wowsync.util.Singletons;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -71,17 +69,12 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 		messageReactions.remove(messageId);
 	}
 
-	private static final Set<OnlineStatus> onlineStates = Collections
-			.unmodifiableSet(EnumSet.of(OnlineStatus.ONLINE, OnlineStatus.IDLE, OnlineStatus.DO_NOT_DISTURB));
-
 	@Override
 	public void onUserUpdateOnlineStatus(final UserUpdateOnlineStatusEvent event) {
-		// We have to test for user going offline, because to fire this event the user has to be cached before.
-		// And we only cache online users.
-		if (onlineStates.contains(event.getOldOnlineStatus())) {
-			db.discordOnlineUsers.updateLastOnline(event.getGuild().getIdLong(), event.getMember().getIdLong(),
-					event.getMember().getEffectiveName());
-		}
+		// This event is only fired for cached users. Because of that, we cache all online users.
+		// We dont test for new or last onlineState, because we dont care because when any event is fired, the user is currently online.
+		db.discordOnlineUsers.updateLastOnline(event.getGuild().getIdLong(), event.getMember().getIdLong(),
+				event.getMember().getEffectiveName());
 	}
 
 	@Override
