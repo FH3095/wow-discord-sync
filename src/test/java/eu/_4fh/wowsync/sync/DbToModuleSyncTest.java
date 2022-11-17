@@ -160,6 +160,7 @@ class DbToModuleSyncTest implements TestBase {
 		acc.setBnetId(nextId());
 		acc.setBnetTag(nextStr());
 		acc.setAdded(new Date());
+		acc.setLastUpdate(new Date());
 		final AccountRemoteId ari = new AccountRemoteId();
 		ari.account = acc;
 		ari.remoteSystem = remoteSystem;

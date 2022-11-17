@@ -8,6 +8,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +40,7 @@ class BattleNetToDbSyncTest implements TestBase {
 	}
 
 	@Test
-	void testInsertAndUpdateAccount() {
+	void testInsertAndUpdateAccount() throws InterruptedException {
 		final long bnetId = nextId();
 		final String bnetTag1 = nextStr();
 		final String bnetTag2 = nextStr();
@@ -52,6 +53,8 @@ class BattleNetToDbSyncTest implements TestBase {
 		assertThat(acc).isNotNull();
 		assertThat(acc.bnetTag()).isEqualTo(bnetTag1);
 
+		TimeUnit.MILLISECONDS.sleep(10);
+		final Date updatedAfter = new Date();
 		info = new BattleNetProfileInfo(bnetId, bnetTag2);
 		try (TransCnt trans = db.createTransaction()) {
 			sync.insertOrUpdateAccount(info);
@@ -60,6 +63,7 @@ class BattleNetToDbSyncTest implements TestBase {
 		acc = db.accounts.byBnetId(bnetId);
 		assertThat(acc).as("Sanity").isNotNull();
 		assertThat(acc.bnetTag()).isEqualTo(bnetTag2);
+		assertThat(acc.lastUpdate()).isAfterOrEqualTo(updatedAfter);
 	}
 
 	@Test
@@ -70,6 +74,7 @@ class BattleNetToDbSyncTest implements TestBase {
 		account.setBnetId(nextId());
 		account.setBnetTag(nextStr());
 		account.setAdded(new Date());
+		account.setLastUpdate(new Date());
 		final Guild guild = new Guild();
 		guild.setRegion(BattleNetRegion.EU);
 		guild.setServer(nextStr());
@@ -115,10 +120,12 @@ class BattleNetToDbSyncTest implements TestBase {
 		acc1.setBnetId(nextId());
 		acc1.setBnetTag(nextStr());
 		acc1.setAdded(Date.from(Instant.now().minus(1, ChronoUnit.HOURS)));
+		acc1.setLastUpdate(new Date());
 		final Account acc2 = new Account();
 		acc2.setBnetId(nextId());
 		acc2.setBnetTag(nextStr());
 		acc2.setAdded(Date.from(Instant.now().minus(20, ChronoUnit.DAYS)));
+		acc2.setLastUpdate(new Date());
 		final Character char1 = createChar(acc1, null);
 		final Character char2 = createChar(acc2, null);
 		final Character charWithoutAccount = createChar(null, null);
@@ -156,6 +163,7 @@ class BattleNetToDbSyncTest implements TestBase {
 		acc.setBnetId(bnetId);
 		acc.setBnetTag(nextStr());
 		acc.setAdded(new Date());
+		acc.setLastUpdate(new Date());
 		return acc;
 	}
 

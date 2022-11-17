@@ -116,6 +116,7 @@ class DbTest implements TestBase {
 		account.setBnetId(nextId());
 		account.setBnetTag(nextStr());
 		account.setAdded(new Date());
+		account.setLastUpdate(new Date());
 		final Character char1 = new Character();
 		final Character char2 = new Character();
 		char1.region = char2.region = BattleNetRegion.EU;
@@ -170,6 +171,7 @@ class DbTest implements TestBase {
 		account.setBnetId(nextId());
 		account.setBnetTag(nextStr());
 		account.setAdded(new Date());
+		account.setLastUpdate(new Date());
 		accountRemoteId.account = account;
 		accountRemoteId.remoteSystem = remoteSystem;
 		accountRemoteId.remoteId = accountRemoteSystemId;

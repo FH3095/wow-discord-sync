@@ -13,7 +13,8 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 @Entity
-@Table(name = "accounts", indexes = @Index(name = "idx_accounts_bnet_id", unique = true, columnList = "bnet_id"))
+@Table(name = "accounts", indexes = { @Index(name = "idx_accounts_bnet_id", unique = true, columnList = "bnet_id"),
+		@Index(name = "idx_accounts_last_update", columnList = "last_update") })
 public class Account {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,9 +31,14 @@ public class Account {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date added;
 
+	@Column(name = "last_update", nullable = false)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date lastUpdate;
+
 	@Override
 	public String toString() {
-		return "Account [id=" + id + ", bnetId=" + bnetId + ", bnetTag=" + bnetTag + ", added=" + added + "]";
+		return "Account [id=" + id + ", bnetId=" + bnetId + ", bnetTag=" + bnetTag + ", added=" + added
+				+ ", lastUpdate=" + lastUpdate + "]";
 	}
 
 	public long id() {
@@ -61,5 +67,13 @@ public class Account {
 
 	public void setAdded(Date added) {
 		this.added = added;
+	}
+
+	public Date lastUpdate() {
+		return lastUpdate;
+	}
+
+	public void setLastUpdate(Date lastUpdate) {
+		this.lastUpdate = lastUpdate;
 	}
 }

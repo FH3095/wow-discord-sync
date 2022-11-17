@@ -194,10 +194,13 @@ public class BattleNetToDbSync {
 			account = new Account();
 			account.setBnetId(profileInfo.id);
 			account.setBnetTag(profileInfo.battleTag);
-			account.setAdded(new Date());
+			final Date now = new Date();
+			account.setAdded(now);
+			account.setLastUpdate(now);
 			db.save(account);
-		} else if (!Objects.equals(profileInfo.battleTag, account.bnetTag())) {
+		} else {
 			account.setBnetTag(profileInfo.battleTag);
+			account.setLastUpdate(new Date());
 			db.save(account);
 		}
 		return account;
