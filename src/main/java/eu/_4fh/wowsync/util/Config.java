@@ -59,7 +59,8 @@ public class Config implements ClosableSingleton {
 	public final URI rootUri;
 	public final String cssStyle;
 	public final byte bnetNumRequestRetries;
-	public final byte keepNewAccountsWithoutGuildsForDays;
+	public final short keepNewAccountsWithoutGuildsForDays;
+	public final short keepCharactersWithAccountButWithoutGuildForDays;
 
 	@CreatesObligation
 	private Config() {
@@ -101,12 +102,19 @@ public class Config implements ClosableSingleton {
 			throw new IllegalStateException(
 					"Invalid value for bnet.rest.num-retries: " + bnetNumRequestRetries + " < 1");
 		}
-		keepNewAccountsWithoutGuildsForDays = Byte
-				.parseByte(nonNull(main, "eu._4fh.wowsync.sync.keepNewAccountsWithoutGuildsForDays"));
+		keepNewAccountsWithoutGuildsForDays = Short
+				.parseShort(nonNull(main, "eu._4fh.wowsync.sync.keepNewAccountsWithoutGuildsForDays"));
 		if (keepNewAccountsWithoutGuildsForDays < 1) {
 			throw new IllegalStateException(
 					"Invalid value for eu._4fh.wowsync.sync.keepNewAccountsWithoutGuildsForDays "
 							+ keepNewAccountsWithoutGuildsForDays + " < 1");
+		}
+		keepCharactersWithAccountButWithoutGuildForDays = Short
+				.parseShort(nonNull(main, "eu._4fh.wowsync.sync.keepCharactersWithAccountButWithoutGuildForDays"));
+		if (keepCharactersWithAccountButWithoutGuildForDays < 1) {
+			throw new IllegalStateException(
+					"Invalid value for eu._4fh.wowsync.sync.keepCharactersWithAccountButWithoutGuildForDays "
+							+ keepCharactersWithAccountButWithoutGuildForDays + " < 1");
 		}
 
 		discordToken = nonNull(main, "discord.token");

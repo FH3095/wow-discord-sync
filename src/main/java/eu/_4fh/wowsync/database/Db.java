@@ -197,6 +197,13 @@ public class Db {
 						.setParameter("remoteSystem", remoteSystem).setParameter("remoteId", remoteId).getResultList();
 			}
 		}
+
+		public int deleteWithoutGuildAndAccountLastUpdateBefore(final Date lastUpdate) {
+			try (TransCnt trans = createTransaction()) {
+				return createUpdate(trans, NamedQueries.charactersDeleteWithoutGuildAndAccountLastUpdateBefore)
+						.setParameter("lastUpdate", lastUpdate).executeUpdate();
+			}
+		}
 	}
 
 	public final class AccountRemoteIdQueries {

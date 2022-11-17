@@ -147,6 +147,32 @@ class BattleNetToDbSyncTest implements TestBase {
 		}
 	}
 
+	@Test
+	void testRemoveCharactersWhenAccountLastUpdateExpired() {
+		final Account acc1 = createAccount(nextId());
+		final Date acc1AddedLastUpdate = Date.from(Instant.now().minus(90, ChronoUnit.DAYS));
+		acc1.setAdded(acc1AddedLastUpdate);
+		acc1.setLastUpdate(acc1AddedLastUpdate);
+		final Account acc2 = createAccount(nextId());
+		final Guild guild = createGuild(nextStr());
+		final Character charWithGuild = createChar(acc1, guild);
+		final Character charWithoutGuild = createChar(acc1, null);
+		final Character charWithCurrentAccount = createChar(acc2, null);
+		try (TransCnt trans = db.createTransaction()) {
+			db.save(acc1, acc2, guild, charWithGuild, charWithoutGuild, charWithCurrentAccount);
+			trans.commit();
+			db.refresh(charWithGuild, charWithoutGuild, charWithCurrentAccount);
+		}
+		try (TransCnt trans = db.createTransaction()) {
+			sync.removeUnusedCharacters();
+			trans.commit();
+		}
+
+		assertThat(db.find(Character.class, charWithGuild.id)).isNotNull();
+		assertThat(db.find(Character.class, charWithCurrentAccount.id)).isNotNull();
+		assertThat(db.find(Character.class, charWithoutGuild.id)).isNull();
+	}
+
 	private Character createChar(final @CheckForNull Account account, final @CheckForNull Guild guild) {
 		final Character c = new Character();
 		c.bnetId = nextId();

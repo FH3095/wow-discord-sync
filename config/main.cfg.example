@@ -13,3 +13,6 @@ discord.token=789
 
 # For how long to keep accounts when they have no guild
 eu._4fh.wowsync.sync.keepNewAccountsWithoutGuildsForDays=10
+
+# For how long to keep characters that have an account but no guild after the account was updated X Days before
+eu._4fh.wowsync.sync.keepCharactersWithAccountButWithoutGuildForDays=30

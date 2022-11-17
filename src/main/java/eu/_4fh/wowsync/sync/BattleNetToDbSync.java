@@ -67,6 +67,7 @@ public class BattleNetToDbSync {
 			updateAccountsFromTokens();
 			updateAccountsFromGuildList();
 			removeUnusedAccounts();
+			removeUnusedCharacters();
 			transaction.commit();
 		}
 	}
@@ -186,6 +187,13 @@ public class BattleNetToDbSync {
 		final int deletedCharactersWithoutGuildAndAccount = db.characters.deleteWithoutGuildAndAccount();
 		log.debug("Removed {} accounts with {} characters and {} characters without guild and account", deletedAccounts,
 				deletedCharactersWithAccounts, deletedCharactersWithoutGuildAndAccount);
+	}
+
+	/*package for test*/ void removeUnusedCharacters() {
+		final Date charactersLimitDate = Date
+				.from(Instant.now().minus(config.keepCharactersWithAccountButWithoutGuildForDays, ChronoUnit.DAYS));
+		final int deletedCharacters = db.characters.deleteWithoutGuildAndAccountLastUpdateBefore(charactersLimitDate);
+		log.debug("Removed {} characters with account but withoug guild", deletedCharacters);
 	}
 
 	/*package for test*/ Account insertOrUpdateAccount(final BattleNetProfileInfo profileInfo) {
