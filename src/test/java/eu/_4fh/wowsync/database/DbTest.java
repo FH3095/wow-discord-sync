@@ -51,8 +51,8 @@ class DbTest implements TestBase {
 		assertThat(users).hasSize(3);
 		final Map<Long, LocalDate> lastOnlinePerUser = users.stream()
 				.collect(Collectors.toMap(dou -> dou.memberId, dou -> dou.lastOnline));
-		assertThat(lastOnlinePerUser)
-				.containsExactlyInAnyOrderEntriesOf(Map.of(user1Id, yesterday, user2Id, today, user3Id, today));
+		assertThat(lastOnlinePerUser).containsOnly(entry(user1Id, yesterday), entry(user2Id, today),
+				entry(user3Id, today));
 	}
 
 	@Test

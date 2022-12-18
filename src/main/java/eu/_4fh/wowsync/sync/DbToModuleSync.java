@@ -20,6 +20,7 @@ import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 import eu._4fh.wowsync.modules.Module;
 import eu._4fh.wowsync.modules.Module.RoleChange;
 import eu._4fh.wowsync.modules.ModuleService;
+import eu._4fh.wowsync.util.Range;
 import eu._4fh.wowsync.util.Singletons;
 
 @DefaultAnnotation(NonNull.class)
@@ -40,8 +41,10 @@ public class DbToModuleSync {
 		this.remoteSystem = remoteSystem;
 		this.module = module;
 		this.rankToGroups = buildRankToGroupsMap(remoteSystem);
-		allGroups = Collections
-				.unmodifiableSet(rankToGroups.getOrDefault((byte) 0, Collections.singleton(remoteSystem.memberGroup)));
+		final Set<String> allGroupsTmp = rankToGroups.values().stream().flatMap(Set::stream)
+				.collect(Collectors.toCollection(HashSet::new));
+		allGroupsTmp.add(remoteSystem.memberGroup);
+		allGroups = Collections.unmodifiableSet(allGroupsTmp);
 	}
 
 	/*package for test*/ Map<Byte, Set<String>> buildRankToGroupsMap(final RemoteSystem remoteSystem) {
@@ -50,20 +53,22 @@ public class DbToModuleSync {
 			if (rank2Group.isEmpty()) {
 				return Collections.emptyMap();
 			}
-			final Map<Byte, String> rankMap = rank2Group.stream()
-					.collect(Collectors.toMap(RemoteSystemRankToGroup::guildRank, RemoteSystemRankToGroup::groupName));
-			final byte maxRank = rankMap.keySet().stream().collect(Collectors.maxBy(Comparator.naturalOrder()))
-					.orElseThrow();
+			final Map<Range<Byte>, String> rankRangesMap = rank2Group.stream()
+					.collect(Collectors.toMap(r2g -> new Range<Byte>(r2g.guildRankFrom(), r2g.getGuildRankTo()),
+							RemoteSystemRankToGroup::groupName));
+			final byte maxRank = rankRangesMap.keySet().stream().map(r -> r.end)
+					.collect(Collectors.maxBy(Comparator.naturalOrder())).orElseThrow();
 
-			final Set<String> tmpGroups = new HashSet<>();
-			tmpGroups.add(remoteSystem.memberGroup);
 			final Map<Byte, Set<String>> result = new HashMap<>(maxRank);
 			for (byte rank = maxRank; rank >= 0; --rank) {
-				final @CheckForNull String rankGroup = rankMap.get(rank);
-				if (rankGroup != null) {
-					tmpGroups.add(rankGroup);
+				final Set<String> rankGroups = new HashSet<>();
+				rankGroups.add(remoteSystem.memberGroup);
+				for (Map.Entry<Range<Byte>, String> rankRangeGroup : rankRangesMap.entrySet()) {
+					if (rankRangeGroup.getKey().fits(rank)) {
+						rankGroups.add(rankRangeGroup.getValue());
+					}
 				}
-				result.put(rank, Collections.unmodifiableSet(new HashSet<>(tmpGroups)));
+				result.put(rank, Collections.unmodifiableSet(rankGroups));
 			}
 			return Collections.unmodifiableMap(result);
 		}

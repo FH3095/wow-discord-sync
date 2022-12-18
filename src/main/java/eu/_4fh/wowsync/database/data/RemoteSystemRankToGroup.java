@@ -21,21 +21,25 @@ public class RemoteSystemRankToGroup {
 	private RemoteSystem remoteSystem;
 
 	@Id
-	@Column(name = "guild_rank", nullable = false)
-	private byte guildRank;
+	@Column(name = "guild_rank_from", nullable = false)
+	private byte guildRankFrom;
+
+	@Id
+	@Column(name = "guild_rank_to", nullable = false)
+	private byte guildRankTo;
 
 	@Column(name = "group_name", nullable = false, length = 64)
 	private String groupName;
 
 	@Override
 	public String toString() {
-		return "RemoteSystemRankToGroup [remoteSystem=" + remoteSystem + ", guildRank=" + guildRank + ", groupName="
-				+ groupName + "]";
+		return "RemoteSystemRankToGroup [remoteSystem=" + remoteSystem + ", guildRankFrom=" + guildRankFrom
+				+ ", guildRankTo=" + guildRankTo + ", groupName=" + groupName + "]";
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(guildRank, remoteSystem);
+		return Objects.hash(guildRankFrom, guildRankTo, remoteSystem);
 	}
 
 	@Override
@@ -47,7 +51,8 @@ public class RemoteSystemRankToGroup {
 			return false;
 		}
 		RemoteSystemRankToGroup other = (RemoteSystemRankToGroup) obj;
-		return guildRank == other.guildRank && Objects.equals(remoteSystem, other.remoteSystem);
+		return guildRankFrom == other.guildRankFrom && guildRankTo == other.guildRankTo
+				&& Objects.equals(remoteSystem, other.remoteSystem);
 	}
 
 	public RemoteSystem remoteSystem() {
@@ -58,12 +63,20 @@ public class RemoteSystemRankToGroup {
 		this.remoteSystem = remoteSystem;
 	}
 
-	public byte guildRank() {
-		return guildRank;
+	public byte guildRankFrom() {
+		return guildRankFrom;
 	}
 
-	public void setGuildRank(byte guildRank) {
-		this.guildRank = guildRank;
+	public void setGuildRankFrom(byte guildRankFrom) {
+		this.guildRankFrom = guildRankFrom;
+	}
+
+	public byte getGuildRankTo() {
+		return guildRankTo;
+	}
+
+	public void setGuildRankTo(byte guildRankTo) {
+		this.guildRankTo = guildRankTo;
 	}
 
 	public String groupName() {

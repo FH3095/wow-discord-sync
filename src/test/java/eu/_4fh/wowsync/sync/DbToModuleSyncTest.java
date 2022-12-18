@@ -66,10 +66,11 @@ class DbToModuleSyncTest implements TestBase {
 		this.remoteSystem = remoteSystem;
 	}
 
-	private RemoteSystemRankToGroup createRankToGroup(final int rank, final String group) {
+	private RemoteSystemRankToGroup createRankToGroup(final int rankFrom, final int rankTo, final String group) {
 		final RemoteSystemRankToGroup rankToGroup = new RemoteSystemRankToGroup();
 		rankToGroup.setRemoteSystem(remoteSystem);
-		rankToGroup.setGuildRank((byte) rank);
+		rankToGroup.setGuildRankFrom((byte) rankFrom);
+		rankToGroup.setGuildRankTo((byte) rankTo);
 		rankToGroup.setGroupName(group);
 		try (TransCnt trans = db.createTransaction()) {
 			db.save(rankToGroup);
@@ -81,8 +82,8 @@ class DbToModuleSyncTest implements TestBase {
 
 	@Test
 	void testBuildRankToGroupsMap() {
-		final RemoteSystemRankToGroup r5Group = createRankToGroup(5, nextStr());
-		final RemoteSystemRankToGroup r2Group = createRankToGroup(2, nextStr());
+		final RemoteSystemRankToGroup r5Group = createRankToGroup(0, 5, nextStr());
+		final RemoteSystemRankToGroup r2Group = createRankToGroup(0, 2, nextStr());
 		final Set<String> r5Groups = Set.of(MEMBER_GROUP, r5Group.groupName());
 		final Set<String> r2Groups = Set.of(MEMBER_GROUP, r5Group.groupName(), r2Group.groupName());
 
@@ -109,7 +110,7 @@ class DbToModuleSyncTest implements TestBase {
 	}
 
 	@Test
-	void testCalculateRolesForRemovedUserWithoFormerGroup() {
+	void testCalculateRolesForRemovedUserWithoutFormerGroup() {
 		final String formerMemberGroup = nextStr();
 		try (TransCnt trans = db.createTransaction()) {
 			db.refresh(remoteSystem);
@@ -141,7 +142,8 @@ class DbToModuleSyncTest implements TestBase {
 		try (TransCnt trans = db.createTransaction()) {
 			final RemoteSystemRankToGroup rank = new RemoteSystemRankToGroup();
 			rank.setRemoteSystem(remoteSystem);
-			rank.setGuildRank((byte) 5);
+			rank.setGuildRankFrom((byte) 0);
+			rank.setGuildRankTo((byte) 5);
 			rank.setGroupName(groupName);
 			db.save(rank);
 			trans.commit();
@@ -225,7 +227,8 @@ class DbToModuleSyncTest implements TestBase {
 			db.refresh(character);
 			final RemoteSystemRankToGroup rankGroup = new RemoteSystemRankToGroup();
 			rankGroup.setRemoteSystem(remoteSystem);
-			rankGroup.setGuildRank((byte) 5);
+			rankGroup.setGuildRankFrom((byte) 0);
+			rankGroup.setGuildRankTo((byte) 5);
 			rankGroup.setGroupName(groupName);
 			character.rank = 5;
 			db.save(character, rankGroup);
@@ -251,5 +254,22 @@ class DbToModuleSyncTest implements TestBase {
 		assertThat(roleChange).containsOnlyKeys(remoteUserId);
 		assertThat(roleChange.get(remoteUserId).toRemove).isEmpty();
 		assertThat(roleChange.get(remoteUserId).toAdd).containsExactlyInAnyOrder(groupName);
+	}
+
+	@Test
+	void testGroupOnlyForRange() {
+		final RemoteSystemRankToGroup r0To1Group = createRankToGroup(0, 1, nextStr());
+		final RemoteSystemRankToGroup r2To5Group = createRankToGroup(2, 5, nextStr());
+		final RemoteSystemRankToGroup r3To5Group = createRankToGroup(3, 5, nextStr());
+		final Set<String> r0To1Groups = Set.of(MEMBER_GROUP, r0To1Group.groupName());
+		final Set<String> r2Groups = Set.of(MEMBER_GROUP, r2To5Group.groupName());
+		final Set<String> r3To5Groups = Set.of(MEMBER_GROUP, r2To5Group.groupName(), r3To5Group.groupName());
+
+		final Map<Byte, Set<String>> map = new DbToModuleSync(remoteSystem, testModule)
+				.buildRankToGroupsMap(remoteSystem);
+		assertThat(map).containsOnly(entry((byte) 5, r3To5Groups), entry((byte) 4, r3To5Groups),
+				entry((byte) 3, r3To5Groups), entry((byte) 2, r2Groups), entry((byte) 1, r0To1Groups),
+				entry((byte) 0, r0To1Groups));
+
 	}
 }
