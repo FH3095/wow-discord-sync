@@ -1,8 +1,9 @@
 package eu._4fh.wowsync.database;
 
 import java.security.Key;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,7 +28,6 @@ import eu._4fh.wowsync.util.Singletons;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.TypedQuery;
 
 @DefaultAnnotation(NonNull.class)
@@ -95,7 +95,7 @@ public class Db {
 		}
 
 		public void updateLastOnline(final long guildId, final long memberId, final String memberName) {
-			final Date now = new Date();
+			final LocalDate now = LocalDate.now(Clock.systemUTC());
 			try (final TransCnt trans = createTransaction()) {
 				final DiscordOnlineUser newUser = new DiscordOnlineUser(guildId, memberId, memberName, now);
 				final @CheckForNull DiscordOnlineUser existingUser = trans.em.find(DiscordOnlineUser.class, newUser);
@@ -109,11 +109,10 @@ public class Db {
 			}
 		}
 
-		public List<DiscordOnlineUser> getLastOnlineBefore(final long guildIdLong, final Date date) {
+		public List<DiscordOnlineUser> getLastOnlineBefore(final long guildIdLong, final LocalDate date) {
 			try (final TransCnt trans = createTransaction()) {
 				return createQuery(trans, NamedQueries.discordOnlineUsersByGuildAndLastOnlineLessThan)
-						.setParameter("guildId", guildIdLong).setParameter("date", date, TemporalType.TIMESTAMP)
-						.getResultList();
+						.setParameter("guildId", guildIdLong).setParameter("date", date).getResultList();
 			}
 		}
 	}
@@ -133,10 +132,10 @@ public class Db {
 			}
 		}
 
-		public List<Account> withoutGuildCharacterAddedBefore(final Date accountsLimitDate) {
+		public List<Account> withoutGuildCharacterAddedBefore(final LocalDate accountsLimitDate) {
 			try (TransCnt trans = createTransaction()) {
 				return createQuery(trans, NamedQueries.accountWithoutGuildCharacterAddedBefore)
-						.setParameter("dateAdded", accountsLimitDate, TemporalType.TIMESTAMP).getResultList();
+						.setParameter("dateAdded", accountsLimitDate).getResultList();
 			}
 		}
 
@@ -198,7 +197,7 @@ public class Db {
 			}
 		}
 
-		public int deleteWithoutGuildAndAccountLastUpdateBefore(final Date lastUpdate) {
+		public int deleteWithoutGuildAndAccountLastUpdateBefore(final LocalDate lastUpdate) {
 			try (TransCnt trans = createTransaction()) {
 				return createUpdate(trans, NamedQueries.charactersDeleteWithoutGuildAndAccountLastUpdateBefore)
 						.setParameter("lastUpdate", lastUpdate).executeUpdate();

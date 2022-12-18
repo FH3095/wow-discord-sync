@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 
+import java.time.LocalDate;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -159,8 +159,8 @@ class DbToModuleSyncTest implements TestBase {
 		final Account acc = new Account();
 		acc.setBnetId(nextId());
 		acc.setBnetTag(nextStr());
-		acc.setAdded(new Date());
-		acc.setLastUpdate(new Date());
+		acc.setAdded(LocalDate.now());
+		acc.setLastUpdate(LocalDate.now());
 		final AccountRemoteId ari = new AccountRemoteId();
 		ari.account = acc;
 		ari.remoteSystem = remoteSystem;

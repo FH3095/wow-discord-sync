@@ -1,5 +1,7 @@
 package eu._4fh.wowsync.discord;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +17,7 @@ import edu.umd.cs.findbugs.annotations.CreatesObligation;
 import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
 import edu.umd.cs.findbugs.annotations.DischargesObligation;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import eu._4fh.abstract_bnet_api.util.Pair;
 import eu._4fh.wowsync.database.Db;
 import eu._4fh.wowsync.database.data.RemoteSystem.RemoteSystemType;
 import eu._4fh.wowsync.modules.Module.RoleChange;
@@ -42,6 +45,8 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 	private final JDA jda;
 	private final Db db;
 	private final Set<Long> messageReactions = ConcurrentHashMap.newKeySet();
+	private volatile LocalDate lastOnlineUserUpdateDay = LocalDate.now(Clock.systemUTC());
+	private final Set<Pair<Long, Long>> alreadyUpdatedOnlineUsers = ConcurrentHashMap.newKeySet();
 
 	@CreatesObligation
 	private DiscordHandler() {
@@ -71,10 +76,18 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 	@Override
 	public void onUserUpdateOnlineStatus(final UserUpdateOnlineStatusEvent event) {
-		// This event is only fired for cached users. Because of that, we cache all online users.
-		// We dont test for new or last onlineState, because we dont care because when any event is fired, the user is currently online.
-		db.discordOnlineUsers.updateLastOnline(event.getGuild().getIdLong(), event.getMember().getIdLong(),
-				event.getMember().getEffectiveName());
+		final LocalDate today = LocalDate.now(Clock.systemUTC());
+		if (!lastOnlineUserUpdateDay.equals(today)) {
+			alreadyUpdatedOnlineUsers.clear();
+			lastOnlineUserUpdateDay = today;
+		}
+		final long guildId = event.getGuild().getIdLong();
+		final long memberId = event.getMember().getIdLong();
+		if (alreadyUpdatedOnlineUsers.add(new Pair<>(guildId, memberId))) {
+			// This event is only fired for cached users. Because of that, we cache all online users.
+			// We dont test for new or last onlineState, because we dont care because when any event is fired, the user is currently online.
+			db.discordOnlineUsers.updateLastOnline(guildId, memberId, event.getMember().getEffectiveName());
+		}
 	}
 
 	@Override

@@ -4,12 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
 import java.security.Key;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -34,19 +35,24 @@ class DbTest implements TestBase {
 		final long user1Id = nextId();
 		final long user2Id = nextId();
 		final long user3Id = nextId();
-		final Date tomorrow = new Date(new Date().getTime() + TimeUnit.DAYS.toMillis(1));
+		final LocalDate today = LocalDate.now(Clock.systemUTC());
+		final LocalDate yesterday = today.minusDays(1);
+		final LocalDate tomorrow = today.plusDays(1);
 
 		assertThat(db.discordOnlineUsers.getLastOnlineBefore(guildId, tomorrow)).isEmpty();
-		db.discordOnlineUsers.updateLastOnline(guildId, user1Id, Long.toString(user1Id));
-		db.discordOnlineUsers.updateLastOnline(guildId, user2Id, Long.toString(user2Id));
-		TimeUnit.SECONDS.sleep(2);
+		try (TransCnt trans = db.createTransaction()) {
+			trans.em.persist(new DiscordOnlineUser(guildId, user1Id, Long.toString(user1Id), yesterday));
+			trans.em.persist(new DiscordOnlineUser(guildId, user2Id, Long.toString(user2Id), yesterday));
+			trans.commit();
+		}
 		db.discordOnlineUsers.updateLastOnline(guildId, user2Id, Long.toString(user2Id));
 		db.discordOnlineUsers.updateLastOnline(guildId, user3Id, Long.toString(user3Id));
 		final List<DiscordOnlineUser> users = db.discordOnlineUsers.getLastOnlineBefore(guildId, tomorrow);
 		assertThat(users).hasSize(3);
-		final Date userOneDate = users.stream().filter(dou -> dou.memberId == user1Id).findAny().get().lastOnline;
-		assertThat(users).filteredOn(dou -> dou.memberId != user1Id).extracting(dou -> dou.lastOnline)
-				.allMatch(d -> d.after(userOneDate));
+		final Map<Long, LocalDate> lastOnlinePerUser = users.stream()
+				.collect(Collectors.toMap(dou -> dou.memberId, dou -> dou.lastOnline));
+		assertThat(lastOnlinePerUser)
+				.containsExactlyInAnyOrderEntriesOf(Map.of(user1Id, yesterday, user2Id, today, user3Id, today));
 	}
 
 	@Test
@@ -115,8 +121,9 @@ class DbTest implements TestBase {
 		final Account account = new Account();
 		account.setBnetId(nextId());
 		account.setBnetTag(nextStr());
-		account.setAdded(new Date());
-		account.setLastUpdate(new Date());
+		final LocalDate now = LocalDate.now(Clock.systemUTC());
+		account.setAdded(now);
+		account.setLastUpdate(now);
 		final Character char1 = new Character();
 		final Character char2 = new Character();
 		char1.region = char2.region = BattleNetRegion.EU;
@@ -170,8 +177,9 @@ class DbTest implements TestBase {
 		remoteSystem.forTestSetKey(nextStr());
 		account.setBnetId(nextId());
 		account.setBnetTag(nextStr());
-		account.setAdded(new Date());
-		account.setLastUpdate(new Date());
+		final LocalDate now = LocalDate.now(Clock.systemUTC());
+		account.setAdded(now);
+		account.setLastUpdate(now);
 		accountRemoteId.account = account;
 		accountRemoteId.remoteSystem = remoteSystem;
 		accountRemoteId.remoteId = accountRemoteSystemId;

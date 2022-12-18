@@ -3,12 +3,10 @@ package eu._4fh.wowsync.sync;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +32,10 @@ class BattleNetToDbSyncTest implements TestBase {
 	private final BattleNetToDbSync sync;
 	private final Db db;
 
+	private static LocalDate today() {
+		return LocalDate.now(Clock.systemUTC());
+	}
+
 	public BattleNetToDbSyncTest() {
 		sync = new BattleNetToDbSync();
 		db = Singletons.instance(Db.class);
@@ -53,8 +55,6 @@ class BattleNetToDbSyncTest implements TestBase {
 		assertThat(acc).isNotNull();
 		assertThat(acc.bnetTag()).isEqualTo(bnetTag1);
 
-		TimeUnit.MILLISECONDS.sleep(10);
-		final Date updatedAfter = new Date();
 		info = new BattleNetProfileInfo(bnetId, bnetTag2);
 		try (TransCnt trans = db.createTransaction()) {
 			sync.insertOrUpdateAccount(info);
@@ -63,7 +63,6 @@ class BattleNetToDbSyncTest implements TestBase {
 		acc = db.accounts.byBnetId(bnetId);
 		assertThat(acc).as("Sanity").isNotNull();
 		assertThat(acc.bnetTag()).isEqualTo(bnetTag2);
-		assertThat(acc.lastUpdate()).isAfterOrEqualTo(updatedAfter);
 	}
 
 	@Test
@@ -73,8 +72,8 @@ class BattleNetToDbSyncTest implements TestBase {
 		final Account account = new Account();
 		account.setBnetId(nextId());
 		account.setBnetTag(nextStr());
-		account.setAdded(new Date());
-		account.setLastUpdate(new Date());
+		account.setAdded(today());
+		account.setLastUpdate(today());
 		final Guild guild = new Guild();
 		guild.setRegion(BattleNetRegion.EU);
 		guild.setServer(nextStr());
@@ -119,13 +118,13 @@ class BattleNetToDbSyncTest implements TestBase {
 		final Account acc1 = new Account();
 		acc1.setBnetId(nextId());
 		acc1.setBnetTag(nextStr());
-		acc1.setAdded(Date.from(Instant.now().minus(1, ChronoUnit.HOURS)));
-		acc1.setLastUpdate(new Date());
+		acc1.setAdded(today().minusDays(1));
+		acc1.setLastUpdate(today());
 		final Account acc2 = new Account();
 		acc2.setBnetId(nextId());
 		acc2.setBnetTag(nextStr());
-		acc2.setAdded(Date.from(Instant.now().minus(20, ChronoUnit.DAYS)));
-		acc2.setLastUpdate(new Date());
+		acc2.setAdded(today().minusDays(20));
+		acc2.setLastUpdate(today());
 		final Character char1 = createChar(acc1, null);
 		final Character char2 = createChar(acc2, null);
 		final Character charWithoutAccount = createChar(null, null);
@@ -150,7 +149,7 @@ class BattleNetToDbSyncTest implements TestBase {
 	@Test
 	void testRemoveCharactersWhenAccountLastUpdateExpired() {
 		final Account acc1 = createAccount(nextId());
-		final Date acc1AddedLastUpdate = Date.from(Instant.now().minus(90, ChronoUnit.DAYS));
+		final LocalDate acc1AddedLastUpdate = today().minusDays(90);
 		acc1.setAdded(acc1AddedLastUpdate);
 		acc1.setLastUpdate(acc1AddedLastUpdate);
 		final Account acc2 = createAccount(nextId());
@@ -188,8 +187,8 @@ class BattleNetToDbSyncTest implements TestBase {
 		final Account acc = new Account();
 		acc.setBnetId(bnetId);
 		acc.setBnetTag(nextStr());
-		acc.setAdded(new Date());
-		acc.setLastUpdate(new Date());
+		acc.setAdded(today());
+		acc.setLastUpdate(today());
 		return acc;
 	}
 

@@ -1,10 +1,9 @@
 package eu._4fh.wowsync.sync;
 
 import java.net.URI;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -179,8 +178,8 @@ public class BattleNetToDbSync {
 	}
 
 	/*package for test*/ void removeUnusedAccounts() {
-		final Date accountsLimitDate = Date
-				.from(Instant.now().minus(config.keepNewAccountsWithoutGuildsForDays, ChronoUnit.DAYS));
+		final LocalDate accountsLimitDate = LocalDate.now(Clock.systemUTC())
+				.minusDays(config.keepNewAccountsWithoutGuildsForDays);
 		final List<Account> accounts = db.accounts.withoutGuildCharacterAddedBefore(accountsLimitDate);
 		final int deletedCharactersWithAccounts = db.characters.deleteByAccounts(accounts);
 		final int deletedAccounts = db.accounts.delete(accounts);
@@ -190,8 +189,8 @@ public class BattleNetToDbSync {
 	}
 
 	/*package for test*/ void removeUnusedCharacters() {
-		final Date charactersLimitDate = Date
-				.from(Instant.now().minus(config.keepCharactersWithAccountButWithoutGuildForDays, ChronoUnit.DAYS));
+		final LocalDate charactersLimitDate = LocalDate.now(Clock.systemUTC())
+				.minusDays(config.keepCharactersWithAccountButWithoutGuildForDays);
 		final int deletedCharacters = db.characters.deleteWithoutGuildAndAccountLastUpdateBefore(charactersLimitDate);
 		log.debug("Removed {} characters with account but without guild", deletedCharacters);
 	}
@@ -202,13 +201,13 @@ public class BattleNetToDbSync {
 			account = new Account();
 			account.setBnetId(profileInfo.id);
 			account.setBnetTag(profileInfo.battleTag);
-			final Date now = new Date();
+			final LocalDate now = LocalDate.now(Clock.systemUTC());
 			account.setAdded(now);
 			account.setLastUpdate(now);
 			db.save(account);
 		} else {
 			account.setBnetTag(profileInfo.battleTag);
-			account.setLastUpdate(new Date());
+			account.setLastUpdate(LocalDate.now(Clock.systemUTC()));
 			db.save(account);
 		}
 		return account;

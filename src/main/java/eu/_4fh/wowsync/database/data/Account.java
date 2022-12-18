@@ -1,6 +1,6 @@
 package eu._4fh.wowsync.database.data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,12 +28,12 @@ public class Account {
 	private String bnetTag;
 
 	@Column(name = "added", nullable = false, updatable = false)
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date added;
+	@Temporal(TemporalType.DATE)
+	private LocalDate added;
 
 	@Column(name = "last_update", nullable = false)
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date lastUpdate;
+	@Temporal(TemporalType.DATE)
+	private LocalDate lastUpdate;
 
 	@Override
 	public String toString() {
@@ -61,19 +61,19 @@ public class Account {
 		this.bnetTag = bnetTag;
 	}
 
-	public Date added() {
+	public LocalDate added() {
 		return added;
 	}
 
-	public void setAdded(Date added) {
+	public void setAdded(LocalDate added) {
 		this.added = added;
 	}
 
-	public Date lastUpdate() {
+	public LocalDate lastUpdate() {
 		return lastUpdate;
 	}
 
-	public void setLastUpdate(Date lastUpdate) {
+	public void setLastUpdate(LocalDate lastUpdate) {
 		this.lastUpdate = lastUpdate;
 	}
 }

@@ -1,6 +1,6 @@
 package eu._4fh.wowsync.database.data;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Objects;
 
 import jakarta.persistence.Column;
@@ -28,15 +28,16 @@ public class DiscordOnlineUser {
 	public String memberName;
 
 	@Column(name = "last_online", nullable = false)
-	@Temporal(TemporalType.TIMESTAMP)
-	public Date lastOnline;
+	@Temporal(TemporalType.DATE)
+	public LocalDate lastOnline;
 
 	@SuppressWarnings("unused")
 	private DiscordOnlineUser() {
 		// Used by Hibernate
 	}
 
-	public DiscordOnlineUser(final long guildId, final long memberId, final String memberName, final Date lastOnline) {
+	public DiscordOnlineUser(final long guildId, final long memberId, final String memberName,
+			final LocalDate lastOnline) {
 		this.guildId = guildId;
 		this.memberId = memberId;
 		this.memberName = memberName;
