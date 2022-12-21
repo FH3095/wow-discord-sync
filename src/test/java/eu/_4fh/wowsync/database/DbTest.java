@@ -156,8 +156,7 @@ class DbTest implements TestBase {
 	}
 
 	@Test
-	void testRemoteIdAndMinGuildRankByGuild() {
-		final byte minGuildRank = 5;
+	void testRemoteIdAndCharactersByGuild() {
 		final long accountRemoteSystemId = nextId();
 		final Guild guild = new Guild();
 		final RemoteSystem remoteSystem = new RemoteSystem();
@@ -195,14 +194,18 @@ class DbTest implements TestBase {
 		char2.bnetId = nextId();
 		char3.bnetId = nextId();
 		char1.rank = 7;
-		char2.rank = minGuildRank;
+		char2.rank = 5;
 		char3.rank = 1;
 		try (TransCnt trans = db.createTransaction()) {
 			db.save(guild, remoteSystem, account, accountRemoteId, char1, char2, char3);
 			trans.commit();
 		}
 
-		final Map<Long, Byte> result = db.groupedQueries.remoteIdAndMinGuildRankByGuild(remoteSystem);
-		assertThat(result).containsOnly(entry(accountRemoteSystemId, minGuildRank));
+		final Map<Long, List<Character>> result = db.accountRemoteIds
+				.remoteIdWithCharactersByGuildAndRemoteSystem(guild, remoteSystem);
+		assertThat(result).hasSize(1);
+		assertThat(result).extractingByKey(accountRemoteSystemId).asList().hasSize(2);
+		assertThat(result.get(accountRemoteSystemId)).map(c -> c.name).containsExactlyInAnyOrder(char1.name,
+				char2.name);
 	}
 }

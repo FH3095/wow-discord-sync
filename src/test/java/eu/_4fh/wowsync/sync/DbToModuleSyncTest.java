@@ -14,6 +14,8 @@ import java.util.Set;
 import org.easymock.Capture;
 import org.easymock.CaptureType;
 import org.easymock.EasyMock;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -36,11 +38,14 @@ class DbToModuleSyncTest implements TestBase {
 	private final String MEMBER_GROUP = getClass().getSimpleName() + "MemberGroup";
 	private final String FORMER_MEMBER_GROUP = getClass().getSimpleName() + "FormerMemberGroup";
 
-	private final Db db = Singletons.instance(Db.class);
-	private final Module testModule;
-	private final RemoteSystem remoteSystem;
+	private Db db;
+	private Module testModule;
+	private RemoteSystem remoteSystem;
 
-	DbToModuleSyncTest() {
+	@BeforeEach
+	void setup() {
+		db = Singletons.instance(Db.class);
+
 		testModule = EasyMock.strictMock(Module.class);
 		testModule.close();
 		EasyMock.expectLastCall().asStub();
@@ -48,22 +53,26 @@ class DbToModuleSyncTest implements TestBase {
 
 		final Guild guild = new Guild();
 		guild.setRegion(BattleNetRegion.EU);
-		guild.setServer(nextStr());
-		guild.setName(nextStr());
-		final RemoteSystem remoteSystem = new RemoteSystem();
+		guild.setServer(TestBase.sNextStr());
+		guild.setName(TestBase.sNextStr());
+		remoteSystem = new RemoteSystem();
 		remoteSystem.guild = guild;
 		remoteSystem.memberGroup = MEMBER_GROUP;
 		remoteSystem.formerMemberGroup = FORMER_MEMBER_GROUP;
-		remoteSystem.nameOrLink = nextStr();
+		remoteSystem.nameOrLink = TestBase.sNextStr();
 		remoteSystem.type = RemoteSystemType.Discord;
-		remoteSystem.systemId = nextId();
-		remoteSystem.forTestSetKey(nextStr());
+		remoteSystem.systemId = TestBase.sNextId();
+		remoteSystem.forTestSetKey(TestBase.sNextStr());
 		try (TransCnt trans = db.createTransaction()) {
 			db.save(guild, remoteSystem);
 			trans.commit();
 			db.refresh(remoteSystem);
 		}
-		this.remoteSystem = remoteSystem;
+	}
+
+	@AfterEach
+	void teardown() {
+		EasyMock.verify(testModule);
 	}
 
 	private RemoteSystemRankToGroup createRankToGroup(final int rankFrom, final int rankTo, final String group) {
@@ -158,15 +167,29 @@ class DbToModuleSyncTest implements TestBase {
 	}
 
 	private Character createCharacter(final long remoteUserId, final @CheckForNull Guild guild) {
-		final Account acc = new Account();
-		acc.setBnetId(nextId());
-		acc.setBnetTag(nextStr());
-		acc.setAdded(LocalDate.now());
-		acc.setLastUpdate(LocalDate.now());
-		final AccountRemoteId ari = new AccountRemoteId();
-		ari.account = acc;
-		ari.remoteSystem = remoteSystem;
-		ari.remoteId = remoteUserId;
+		final Account acc;
+		final AccountRemoteId ari;
+		try (TransCnt trans = db.createTransaction()) {
+			final List<AccountRemoteId> remoteIds = db.forTestQuery(AccountRemoteId.class,
+					"SELECT ari FROM AccountRemoteId ari WHERE ari.remoteId = " + remoteUserId);
+			assertThat(remoteIds).size().isLessThanOrEqualTo(1);
+
+			if (remoteIds.size() == 1) {
+				ari = remoteIds.get(0);
+				acc = ari.account;
+			} else {
+				acc = new Account();
+				acc.setBnetId(nextId());
+				acc.setBnetTag(nextStr());
+				acc.setAdded(LocalDate.now());
+				acc.setLastUpdate(LocalDate.now());
+				ari = new AccountRemoteId();
+				ari.account = acc;
+				ari.remoteSystem = remoteSystem;
+				ari.remoteId = remoteUserId;
+			}
+		}
+
 		final Character character = new Character();
 		character.account = acc;
 		character.guild = guild;
@@ -271,5 +294,108 @@ class DbToModuleSyncTest implements TestBase {
 				entry((byte) 3, r3To5Groups), entry((byte) 2, r2Groups), entry((byte) 1, r0To1Groups),
 				entry((byte) 0, r0To1Groups));
 
+	}
+
+	@Test
+	void testSyncToModuleOnlyMemberGroup() {
+		final long user1Id = nextId();
+		final long user2Id = nextId();
+		createCharacter(user2Id, remoteSystem.guild);
+
+		final Module testModule = EasyMock.strictMock(Module.class);
+		testModule.close();
+		EasyMock.expectLastCall().asStub();
+		EasyMock.expect(testModule.getAllUsersWithRoles())
+				.andStubReturn(Map.of(user1Id, Set.of(MEMBER_GROUP), user2Id, Set.of()));
+		testModule.changeRoles(Map.of(user1Id, new RoleChange(Set.of(FORMER_MEMBER_GROUP), Set.of(MEMBER_GROUP)),
+				user2Id, new RoleChange(Set.of(MEMBER_GROUP), Set.of())));
+		EasyMock.expectLastCall().once();
+		EasyMock.replay(testModule);
+
+		new DbToModuleSync(remoteSystem, testModule).syncToModule();
+
+		EasyMock.verify(testModule);
+	}
+
+	@Test
+	void testSyncToModuleMultipleRanksWithGroups() {
+		final String GROUP1 = "group1";
+		final String GROUP2 = "group2";
+		final long userId = nextId();
+		createRankToGroup(1, 1, GROUP1);
+		createRankToGroup(2, 2, GROUP2);
+
+		try (final TransCnt trans = db.createTransaction()) {
+			final Character char1 = createCharacter(userId, remoteSystem.guild);
+			final Character char2 = createCharacter(userId, remoteSystem.guild);
+			char1.rank = 1;
+			char2.rank = 2;
+			db.save(char1, char2);
+			trans.commit();
+		}
+
+		final Module testModule = EasyMock.strictMock(Module.class);
+		testModule.close();
+		EasyMock.expectLastCall().asStub();
+		EasyMock.expect(testModule.getAllUsersWithRoles()).andStubReturn(Map.of(userId, Set.of(MEMBER_GROUP)));
+		testModule.changeRoles(Map.of(userId, new RoleChange(Set.of(GROUP1, GROUP2), Set.of())));
+		EasyMock.expectLastCall().once();
+		EasyMock.replay(testModule);
+
+		new DbToModuleSync(remoteSystem, testModule).syncToModule();
+
+		EasyMock.verify(testModule);
+	}
+
+	@Test
+	void testSyncsyncForUser() {
+		final String GROUP1 = "group1";
+		final String GROUP2 = "group2";
+		createRankToGroup(0, 0, GROUP1);
+		createRankToGroup(1, 1, GROUP2);
+
+		final long userId = nextId();
+		final Character char1, char2, char3;
+		try (TransCnt trans = db.createTransaction()) {
+			char1 = createCharacter(userId, remoteSystem.guild);
+			char2 = createCharacter(userId, remoteSystem.guild);
+			char3 = createCharacter(userId, remoteSystem.guild);
+			char1.name = "char4";
+			char2.name = "char2";
+			char3.name = "char3";
+			char3.rank = 0;
+			db.save(char1, char2, char3);
+			trans.commit();
+		}
+
+		final Module testModule = EasyMock.strictMock(Module.class);
+		testModule.close();
+		EasyMock.expectLastCall().asStub();
+		EasyMock.expect(testModule.getRolesForUser(userId)).andStubReturn(Set.of());
+		testModule.setCharacterNames(userId, List.of(char3.name, char2.name, char1.name));
+		EasyMock.expectLastCall().once();
+		testModule.changeRoles(Map.of(userId, new RoleChange(Set.of(MEMBER_GROUP, GROUP1), Set.of())));
+		EasyMock.expectLastCall().once();
+		EasyMock.replay(testModule);
+
+		assertThat(new DbToModuleSync(remoteSystem, testModule).syncForUser(userId)).isTrue();
+
+		EasyMock.verify(testModule);
+	}
+
+	@Test
+	void testSyncsyncForUserNotMember() {
+		final long userId = nextId();
+		createCharacter(userId, null);
+
+		final Module testModule = EasyMock.strictMock(Module.class);
+		testModule.close();
+		EasyMock.expectLastCall().asStub();
+		EasyMock.expect(testModule.getRolesForUser(userId)).andStubReturn(Set.of());
+		EasyMock.replay(testModule);
+
+		assertThat(new DbToModuleSync(remoteSystem, testModule).syncForUser(userId)).isFalse();
+
+		EasyMock.verify(testModule);
 	}
 }

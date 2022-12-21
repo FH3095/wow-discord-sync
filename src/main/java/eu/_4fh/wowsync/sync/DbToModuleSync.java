@@ -75,22 +75,23 @@ public class DbToModuleSync {
 	}
 
 	public boolean syncForUser(final long remoteUserId) {
-		final @CheckForNull Byte minRank;
+		final Set<Byte> ranks;
 		final List<String> sortedCharnames;
 		try (Transaction.TransCnt transaction = db.createTransaction()) {
 			final List<Character> characters = db.characters.byGuildAndRemoteSystemAndRemoteId(remoteSystem.guild,
 					remoteSystem, remoteUserId);
-			minRank = characters.stream().map(c -> c.rank).collect(Collectors.minBy(Comparator.naturalOrder()))
-					.orElse(null);
-			sortedCharnames = characters.stream().sorted(Comparator.comparingInt(c -> c.rank)).map(c -> c.name)
+			ranks = characters.stream().map(c -> c.rank).collect(Collectors.toUnmodifiableSet());
+			sortedCharnames = characters.stream().sorted(Comparator.<Character>comparingInt(c -> c.rank)
+					.thenComparing(c -> c.name).thenComparing(c -> c.server)).map(c -> c.name)
 					.collect(Collectors.toUnmodifiableList());
 		}
-		if (minRank == null) {
+		if (ranks.isEmpty()) {
 			return false;
 		}
 		final Set<String> actualRoles = module.getRolesForUser(remoteUserId);
-		final Set<String> expectedRoles = rankToGroups.getOrDefault(minRank,
-				Collections.singleton(remoteSystem.memberGroup));
+		final Set<String> expectedRoles = ranks.stream().flatMap(
+				rank -> rankToGroups.getOrDefault(rank, Collections.singleton(remoteSystem.memberGroup)).stream())
+				.collect(Collectors.toUnmodifiableSet());
 		final RoleChange change = calculateRoleChanges(actualRoles, expectedRoles);
 		if (change == null || change.toAdd.isEmpty()) {
 			return false;
@@ -101,13 +102,17 @@ public class DbToModuleSync {
 	}
 
 	public void syncToModule() {
-		final Set<String> defaultGroup = Collections.singleton(remoteSystem.memberGroup);
-		final Map<Long, Set<String>> expectedRolesPerUser;
+		final Map<Long, Set<String>> expectedRolesPerUser = new HashMap<>();
 		try (Transaction.TransCnt transaction = db.createTransaction()) {
-			final Map<Long, Byte> remoteIdWithGuildRank = db.groupedQueries
-					.remoteIdAndMinGuildRankByGuild(remoteSystem);
-			expectedRolesPerUser = remoteIdWithGuildRank.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-					entry -> rankToGroups.getOrDefault(entry.getValue(), defaultGroup)));
+			final Map<Long, List<Character>> charactersByRemoteAccountId = db.accountRemoteIds
+					.remoteIdWithCharactersByGuildAndRemoteSystem(remoteSystem.guild, remoteSystem);
+			final Set<String> memberGroupSet = Collections.singleton(remoteSystem.memberGroup);
+			for (Map.Entry<Long, List<Character>> remoteIdWithCharacters : charactersByRemoteAccountId.entrySet()) {
+				final Set<String> roles = remoteIdWithCharacters.getValue().stream()
+						.flatMap(c -> rankToGroups.getOrDefault(c.rank, memberGroupSet).stream())
+						.collect(Collectors.toUnmodifiableSet());
+				expectedRolesPerUser.put(remoteIdWithCharacters.getKey(), roles);
+			}
 		}
 		final Map<Long, Set<String>> actualRolesPerUser = module.getAllUsersWithRoles();
 

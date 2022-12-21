@@ -86,14 +86,19 @@ import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 			"WithoutGuildCharacterAddedBefore",
 			"SELECT a FROM Account a WHERE a.added < :dateAdded AND a NOT IN (SELECT c.account FROM Character c WHERE c.guild IS NOT NULL AND c.account IS NOT NULL)");
 
+	public static final NamedQuery<Object[]> accountRemoteIdWithCharactersByGuildAndRemoteSystem = new NamedQuery<>(
+			Object[].class, "ranksByGuildAndRemoteSystem",
+			"SELECT ari.remoteId, c" + " FROM AccountRemoteId ari INNER JOIN Character c ON ari.account = c.account"
+					+ " WHERE ari.remoteSystem = :remoteSystem AND c.guild = :guild");
+
 	public static final NamedUpdate accountRemoteIdDeleteByAccounts = new NamedUpdate("accountRemoteIdDeleteByAccounts",
 			"DELETE FROM AccountRemoteId ari WHERE ari.account IN :accounts");
 
 	public static final NamedQuery<Character> charactersByBnetIds = new NamedQuery<>(Character.class, "ByBnetIds",
 			"SELECT c FROM Character c WHERE region = :region AND bnetId IN :bnetIds");
 
-	public static final NamedQuery<Character> charactersbyRemoteSystemAndRemoteId = new NamedQuery<>(Character.class,
-			"ByRemoteSystemAndRemoteId",
+	public static final NamedQuery<Character> charactersByGuildAndRemoteSystemAndRemoteId = new NamedQuery<>(
+			Character.class, "ByRemoteSystemAndRemoteId",
 			"SELECT c FROM Character c WHERE c.guild = :guild AND c.account = (SELECT ari.account FROM AccountRemoteId ari WHERE ari.remoteSystem = :remoteSystem AND ari.remoteId = :remoteId)");
 
 	public static final NamedUpdate charactersRemoveGuildReferenceWhereBnetIdNotIn = new NamedUpdate(
