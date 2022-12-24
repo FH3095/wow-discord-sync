@@ -167,13 +167,18 @@ public class DbToModuleSync {
 	public int deleteInactiveUsers() {
 		if (RemoteSystem.RemoteSystemType.Discord.equals(remoteSystem.type)) {
 			// TODO I dont want specific code per remoteSystemType here, but I have no other way to handle that yet.
+			final int deleteUsersAfterInactiveDays = module.deleteUsersAfterInactiveDays();
+			if (deleteUsersAfterInactiveDays <= 0) {
+				return 0;
+			}
+
 			final List<DiscordOnlineUser> users = db.discordOnlineUsers.getLastOnlineBefore(remoteSystem.systemId,
 					LocalDate.now(Clock.systemUTC()));
 			final Map<Long, LocalDate> usersLastOnlineById = users.stream()
 					.collect(Collectors.toUnmodifiableMap(dou -> dou.memberId, dou -> dou.lastOnline));
 			final LocalDate today = LocalDate.now(Clock.systemUTC());
 			final LocalDate kickOfflineBefore = LocalDate.now(Clock.systemUTC())
-					.minusDays(module.deleteUsersAfterInactiveDays());
+					.minusDays(deleteUsersAfterInactiveDays);
 			final Map<Long, Set<String>> usersWithRoles = module.getAllUsersWithRoles();
 			final Set<Long> inactiveUsersWithoutManagedGroup = usersWithRoles.entrySet().stream()
 					.filter(u -> usersLastOnlineById.getOrDefault(u.getKey(), today).isBefore(kickOfflineBefore))

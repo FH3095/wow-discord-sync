@@ -441,4 +441,18 @@ class DbToModuleSyncTest implements TestBase {
 		EasyMock.verify(testModule);
 		assertThat(numDeleted).isOne();
 	}
+
+	@Test
+	void testNoInactiveUserDeletionActivated() {
+		final Module testModule = EasyMock.strictMock(Module.class);
+		testModule.close();
+		EasyMock.expectLastCall().asStub();
+		EasyMock.expect(testModule.deleteUsersAfterInactiveDays()).andStubReturn(0);
+		EasyMock.replay(testModule);
+
+		final int numDeleted = new DbToModuleSync(remoteSystem, testModule).deleteInactiveUsers();
+
+		EasyMock.verify(testModule);
+		assertThat(numDeleted).isZero();
+	}
 }
