@@ -112,9 +112,6 @@ import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 	public static final NamedUpdate charactersDeleteByAccounts = new NamedUpdate("charactersDeleteByAccounts",
 			"DELETE FROM Character c WHERE c.account IN :accounts");
 
-	public static final NamedQuery<Character> charactersByAccountAndGuild = new NamedQuery<>(Character.class,
-			"byAccountAndGuild", "SELECT c FROM Character c WHERE c.account = :account AND c.guild = :guild");
-
 	public static final NamedUpdate charactersDeleteWithoutGuildAndAccountLastUpdateBefore = new NamedUpdate(
 			"charactersDeleteWithoutGuildAndAccountLastUpdateBefore",
 			"DELETE FROM Character c WHERE c.guild = NULL AND c.account IN (SELECT a FROM Account a WHERE a.lastUpdate < :lastUpdate)");

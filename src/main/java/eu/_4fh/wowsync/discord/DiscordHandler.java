@@ -3,6 +3,7 @@ package eu._4fh.wowsync.discord;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -166,5 +167,11 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 	public void setNickname(final long guildId, final long userId, final String newNickname) {
 		jda.getGuildById(guildId).retrieveMemberById(userId)
 				.queue(member -> member.modifyNickname(newNickname).queue());
+	}
+
+	public int kickUsers(final long guildId, final Collection<Long> userIds, final String reason) {
+		final List<Member> members = jda.getGuildById(guildId).retrieveMembersByIds(userIds).get();
+		members.forEach(member -> member.kick().reason(reason).queue());
+		return members.size();
 	}
 }

@@ -26,7 +26,9 @@ public class Cron {
 		new BattleNetToDbSync().updateAndDeleteAccounts();
 		final List<RemoteSystem> remoteSystems = Singletons.instance(Db.class).remoteSystems.all();
 		for (final RemoteSystem remoteSystem : remoteSystems) {
-			new DbToModuleSync(remoteSystem).syncToModule();
+			final DbToModuleSync sync = new DbToModuleSync(remoteSystem);
+			sync.deleteInactiveUsers();
+			sync.syncToModule();
 		}
 		return "";
 	}

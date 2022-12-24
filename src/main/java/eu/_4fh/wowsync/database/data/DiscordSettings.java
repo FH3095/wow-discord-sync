@@ -23,6 +23,9 @@ public class DiscordSettings {
 	@Column(name = "reaction_message_id", nullable = true)
 	private @CheckForNull Long reactionMessageId;
 
+	@Column(name = "delete_user_after_inactive_days", nullable = false)
+	private int deleteUserAfterInactiveDays;
+
 	public RemoteSystem remoteSystem() {
 		return remoteSystem;
 	}
@@ -37,6 +40,14 @@ public class DiscordSettings {
 
 	public void setReactionMessageId(final Long reactionMessageId) {
 		this.reactionMessageId = reactionMessageId;
+	}
+
+	public int getDeleteUserAfterInactiveDays() {
+		return deleteUserAfterInactiveDays;
+	}
+
+	public void setDeleteUserAfterInactiveDays(int delteUserAfterInactiveDays) {
+		this.deleteUserAfterInactiveDays = delteUserAfterInactiveDays;
 	}
 
 	@Override

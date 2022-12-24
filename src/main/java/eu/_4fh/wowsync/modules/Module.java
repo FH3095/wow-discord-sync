@@ -53,9 +53,13 @@ public interface Module extends ClosableSingleton {
 	 */
 	Map<Long, Set<String>> getAllUsersWithRoles();
 
+	int deleteUsersAfterInactiveDays();
+
 	Set<String> getRolesForUser(final long userId);
 
 	void changeRoles(final Map<Long, RoleChange> roleChanges);
 
 	void setCharacterNames(final long remoteUserId, final List<String> sortedCharnames);
+
+	int deleteInactiveUsers(final Set<Long> users);
 }

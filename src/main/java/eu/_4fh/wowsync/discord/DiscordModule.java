@@ -53,4 +53,15 @@ public class DiscordModule implements Module {
 		}
 		handler.setNickname(remoteSystem.systemId, userId, sortedCharnames.get(0));
 	}
+
+	@Override
+	public int deleteInactiveUsers(final Set<Long> inactiveUsers) {
+		return handler.kickUsers(remoteSystem.systemId, inactiveUsers,
+				"Inactive more than " + settings.getDeleteUserAfterInactiveDays() + " days");
+	}
+
+	@Override
+	public int deleteUsersAfterInactiveDays() {
+		return settings.getDeleteUserAfterInactiveDays();
+	}
 }

@@ -1,5 +1,7 @@
 package eu._4fh.wowsync.sync;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,6 +17,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import eu._4fh.wowsync.database.Db;
 import eu._4fh.wowsync.database.Transaction;
 import eu._4fh.wowsync.database.data.Character;
+import eu._4fh.wowsync.database.data.DiscordOnlineUser;
 import eu._4fh.wowsync.database.data.RemoteSystem;
 import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 import eu._4fh.wowsync.modules.Module;
@@ -159,5 +162,33 @@ public class DbToModuleSync {
 			toRemove.add(remoteSystem.formerMemberGroup);
 		}
 		return new RoleChange(toAdd, toRemove);
+	}
+
+	public int deleteInactiveUsers() {
+		if (RemoteSystem.RemoteSystemType.Discord.equals(remoteSystem.type)) {
+			// TODO I dont want specific code per remoteSystemType here, but I have no other way to handle that yet.
+			final List<DiscordOnlineUser> users = db.discordOnlineUsers.getLastOnlineBefore(remoteSystem.systemId,
+					LocalDate.now(Clock.systemUTC()));
+			final Map<Long, LocalDate> usersLastOnlineById = users.stream()
+					.collect(Collectors.toUnmodifiableMap(dou -> dou.memberId, dou -> dou.lastOnline));
+			final LocalDate today = LocalDate.now(Clock.systemUTC());
+			final LocalDate kickOfflineBefore = LocalDate.now(Clock.systemUTC())
+					.minusDays(module.deleteUsersAfterInactiveDays());
+			final Map<Long, Set<String>> usersWithRoles = module.getAllUsersWithRoles();
+			final Set<Long> inactiveUsersWithoutManagedGroup = usersWithRoles.entrySet().stream()
+					.filter(u -> usersLastOnlineById.getOrDefault(u.getKey(), today).isBefore(kickOfflineBefore))
+					// Disjoint -> User has no managed group
+					.filter(u -> Collections.disjoint(u.getValue(), allGroups)).map(Map.Entry::getKey)
+					.collect(Collectors.toUnmodifiableSet());
+
+			if (!inactiveUsersWithoutManagedGroup.isEmpty()) {
+				return module.deleteInactiveUsers(inactiveUsersWithoutManagedGroup);
+			} else {
+				return 0;
+			}
+		} else {
+			// Probably module.deleteInactiveUsers(allGroups, Collections.emptyMap()); ?
+			throw new RuntimeException("Missing deleteInactiveUsers for" + remoteSystem.type);
+		}
 	}
 }

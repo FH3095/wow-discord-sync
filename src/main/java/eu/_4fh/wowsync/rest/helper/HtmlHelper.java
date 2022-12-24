@@ -6,8 +6,8 @@ import java.util.Arrays;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import eu._4fh.wowsync.util.Singletons;
 import eu._4fh.wowsync.util.Config;
+import eu._4fh.wowsync.util.Singletons;
 
 @DefaultAnnotation(NonNull.class)
 public class HtmlHelper {
@@ -23,7 +23,7 @@ public class HtmlHelper {
 				.append("</title>\n");
 		str.append("<style>\n").append(config.cssStyle).append("\n</style>\n");
 		if (additionalHeadContent != null && additionalHeadContent.length > 0) {
-			Arrays.stream(additionalHeadContent).forEach(text -> str.append(text));
+			Arrays.stream(additionalHeadContent).forEach(str::append);
 		}
 		str.append("</head>\n\n");
 		return str;

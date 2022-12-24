@@ -12,7 +12,7 @@ class RangeTest {
 	}
 
 	@Test
-	void testRangeConstructorThrowsException() {
+	void testRangeConstructor() {
 		assertThatNoException().isThrownBy(() -> range(5, 5));
 		assertThatNoException().isThrownBy(() -> range(5, 6));
 		assertThatNoException().isThrownBy(() -> range(-5, -5));

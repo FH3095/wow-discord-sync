@@ -187,13 +187,6 @@ public class Db {
 			}
 		}
 
-		public List<Character> byAccountAndGuild(final Account account, final Guild guild) {
-			try (TransCnt trans = createTransaction()) {
-				return createQuery(trans, NamedQueries.charactersByAccountAndGuild).setParameter("account", account)
-						.setParameter("guild", guild).getResultList();
-			}
-		}
-
 		public List<Character> byGuildAndRemoteSystemAndRemoteId(final Guild guild, final RemoteSystem remoteSystem,
 				final long remoteId) {
 			try (TransCnt trans = createTransaction()) {

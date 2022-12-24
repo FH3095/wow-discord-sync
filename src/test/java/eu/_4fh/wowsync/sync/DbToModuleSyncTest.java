@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +26,7 @@ import eu._4fh.wowsync.database.Transaction.TransCnt;
 import eu._4fh.wowsync.database.data.Account;
 import eu._4fh.wowsync.database.data.AccountRemoteId;
 import eu._4fh.wowsync.database.data.Character;
+import eu._4fh.wowsync.database.data.DiscordOnlineUser;
 import eu._4fh.wowsync.database.data.Guild;
 import eu._4fh.wowsync.database.data.RemoteSystem;
 import eu._4fh.wowsync.database.data.RemoteSystem.RemoteSystemType;
@@ -397,5 +399,46 @@ class DbToModuleSyncTest implements TestBase {
 		assertThat(new DbToModuleSync(remoteSystem, testModule).syncForUser(userId)).isFalse();
 
 		EasyMock.verify(testModule);
+	}
+
+	private DiscordOnlineUser createDcOnlineUser(final long id, final LocalDate lastOnline) {
+		return new DiscordOnlineUser(remoteSystem.systemId, id, Long.toUnsignedString(id), lastOnline);
+	}
+
+	@Test
+	void deleteInactiveUsers() {
+		final long userToday = nextId();
+		final long userYesterday = nextId();
+		final long userDayBeforeYesterday = nextId();
+		final long userInGroup = nextId(); // User in a managed group, should not be kicked.
+		final long userNotYetSeen = nextId(); // User that is not yet in DiscordOnlineUser. Should not be kicked.
+
+		final String GROUP = "group";
+		createRankToGroup(0, 0, GROUP);
+
+		final LocalDate today = LocalDate.now(Clock.systemUTC()), yesterday = today.minusDays(1),
+				dayBeforeYesterday = today.minusDays(2);
+
+		try (TransCnt trans = db.createTransaction()) {
+			db.save(createDcOnlineUser(userToday, today), createDcOnlineUser(userYesterday, yesterday),
+					createDcOnlineUser(userDayBeforeYesterday, dayBeforeYesterday),
+					createDcOnlineUser(userInGroup, dayBeforeYesterday));
+			trans.commit();
+		}
+
+		final Module testModule = EasyMock.strictMock(Module.class);
+		testModule.close();
+		EasyMock.expectLastCall().asStub();
+		EasyMock.expect(testModule.deleteUsersAfterInactiveDays()).andStubReturn(1);
+		EasyMock.expect(testModule.getAllUsersWithRoles()).andStubReturn(Map.of(userToday, Set.of(), userYesterday,
+				Set.of(), userDayBeforeYesterday, Set.of(), userInGroup, Set.of(GROUP), userNotYetSeen, Set.of()));
+		EasyMock.expect(testModule.deleteInactiveUsers(EasyMock.eq(Set.of(userDayBeforeYesterday)))).andReturn(1)
+				.once();
+		EasyMock.replay(testModule);
+
+		final int numDeleted = new DbToModuleSync(remoteSystem, testModule).deleteInactiveUsers();
+
+		EasyMock.verify(testModule);
+		assertThat(numDeleted).isOne();
 	}
 }
