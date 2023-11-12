@@ -2,11 +2,6 @@ package eu._4fh.wowsync.rest;
 
 import java.util.List;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
 import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import eu._4fh.wowsync.database.Db;
@@ -14,6 +9,10 @@ import eu._4fh.wowsync.database.data.RemoteSystem;
 import eu._4fh.wowsync.sync.BattleNetToDbSync;
 import eu._4fh.wowsync.sync.DbToModuleSync;
 import eu._4fh.wowsync.util.Singletons;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @DefaultAnnotation(NonNull.class)
 @Path("cron")

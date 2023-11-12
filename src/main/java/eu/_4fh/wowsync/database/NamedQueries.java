@@ -107,14 +107,14 @@ import eu._4fh.wowsync.database.data.RemoteSystemRankToGroup;
 
 	public static final NamedUpdate charactersDeleteWhereAccountAndGuildNull = new NamedUpdate(
 			"charactersDeleteWhereAccountAndGuildNull",
-			"DELETE FROM Character c WHERE c.guild = NULL AND c.account = NULL");
+			"DELETE FROM Character c WHERE c.guild IS NULL AND c.account IS NULL");
 
 	public static final NamedUpdate charactersDeleteByAccounts = new NamedUpdate("charactersDeleteByAccounts",
 			"DELETE FROM Character c WHERE c.account IN :accounts");
 
 	public static final NamedUpdate charactersDeleteWithoutGuildAndAccountLastUpdateBefore = new NamedUpdate(
 			"charactersDeleteWithoutGuildAndAccountLastUpdateBefore",
-			"DELETE FROM Character c WHERE c.guild = NULL AND c.account IN (SELECT a FROM Account a WHERE a.lastUpdate < :lastUpdate)");
+			"DELETE FROM Character c WHERE c.guild IS NULL AND c.account IN (SELECT a FROM Account a WHERE a.lastUpdate < :lastUpdate)");
 
 	public static final NamedQuery<RemoteSystemRankToGroup> remoteSystemRankToGroupByRemoteSystem = new NamedQuery<>(
 			RemoteSystemRankToGroup.class, "ByRemoteSystem",
